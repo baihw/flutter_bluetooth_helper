@@ -1,3 +1,40 @@
+target/
+overlays/
+logs/
+.idea/
+.vscode/
+.atom/
+.DS_Store
+
+*.versionsBackup
+*.ctxt
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Flutter/Dart/Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.bin
+*.lock
+
+# Web related
+lib/generated_plugin_registrant.dart
+
+# Exceptions to above rules.
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+hs_err_pid*
+
 # Built application files
 *.apk
 *.aar
