@@ -21,13 +21,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-//    BluetoothHelper.enableDebug();
+    BluetoothHelper.enableDebug();
 
     _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
     _device.eventCallback = (BluetoothEvent event) {
       print("event: $event");
     };
-    _timer = Timer.periodic(Duration(seconds: 50), (_timer) {
+    _timer = Timer.periodic(Duration(seconds: 20), (_timer) {
       BluetoothHelper.me.scan().then((List<BluetoothDevice> _scanResult) {
         print("${_timer.tick} scanResult: $_scanResult");
         if (!mounted) return;
@@ -50,6 +50,12 @@ class _MyAppState extends State<MyApp> {
             Text('Bluetooth Test...'),
             Row(
               children: <Widget>[
+                RaisedButton(
+                  child: Text("keepAlive"),
+                  onPressed: () {
+                    BluetoothHelper.me.keepAlive().then((_res) => print("keepAlive: $_res"));
+                  },
+                ),
                 RaisedButton(
                   child: Text("scan"),
                   onPressed: () => BluetoothHelper.me.scan(timeout: 2).then((List<BluetoothDevice> _res) {

@@ -1,6 +1,7 @@
 package com.wee0.flutter.bluetooth_helper;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Application;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -30,7 +31,7 @@ public class BluetoothHelperPlugin implements FlutterPlugin, ActivityAware, Plug
     // 初始化操作
     private synchronized void _init() {
         MyLog.info("init begin...");
-        MyLog.info("android version: {}", android.os.Build.VERSION.SDK_INT);
+        MyLog.info("android version: {}, sdk: {}", android.os.Build.VERSION.RELEASE, android.os.Build.VERSION.SDK_INT);
         MyLog.info("_registrar: {}", _registrar);
         MyLog.info("_flutterPluginBinding: {}", _flutterPluginBinding);
         MyLog.info("_activityPluginBinding: {}", _activityPluginBinding);
@@ -68,6 +69,7 @@ public class BluetoothHelperPlugin implements FlutterPlugin, ActivityAware, Plug
 
         MyLog.info("_activity: {}", PlatformHelper.me().getActivity());
         MyLog.info("_application: {}", PlatformHelper.me().getApplication());
+        MyLog.info("_application.packageName: {}", _application.getPackageName());
         MyLog.info("_messenger: {}", _messenger);
 
         if (null == _messenger) {
@@ -79,7 +81,6 @@ public class BluetoothHelperPlugin implements FlutterPlugin, ActivityAware, Plug
 
         BluetoothManager _bluetoothManager = (BluetoothManager) _application.getSystemService(Context.BLUETOOTH_SERVICE);
         MyBluetoothManager.me().init(_bluetoothManager);
-        MyLog.debug("bluetooth.isEnabled: {}", MyBluetoothManager.me().isEnabled());
 
         MyLog.info("init end.");
     }

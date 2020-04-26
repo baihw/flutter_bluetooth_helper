@@ -276,7 +276,7 @@ final class MyBluetoothDevice {
         MyLog.debug("disconnect gatt for : {}", this.device);
         this.gatt.disconnect();
         int _connectionState = MyBluetoothManager.me().getConnectionState(this.device);
-        if (BluetoothProfile.STATE_DISCONNECTED == _connectionState) {
+        if (BluetoothProfile.STATE_DISCONNECTED == _connectionState && null != this.gatt) {
             MyLog.debug("close gatt for : {}", this.device);
             this.gatt.close();
         }

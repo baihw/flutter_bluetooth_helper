@@ -61,13 +61,14 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
                 return;
             }
             MyLog.debug("invoke method: {}", _method);
-            if ("getPlatformVersion".equals(_method)) {
-                _reply.success("Android " + android.os.Build.VERSION.RELEASE);
-                return;
-            }
             if ("debug".equals(_method)) {
 //                Object _enable = _messageData.get(KEY_ARGS);
                 MyLog.enableDebug();
+                _reply.success(true);
+                return;
+            }
+            if ("keepAlive".equals(_method)) {
+                MyAlarmManager.me().start();
                 _reply.success(true);
                 return;
             }

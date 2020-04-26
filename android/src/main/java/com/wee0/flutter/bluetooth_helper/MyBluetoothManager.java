@@ -32,7 +32,8 @@ final class MyBluetoothManager {
         if (null == bluetoothManager) throw new IllegalStateException("bluetoothManager can not be null!");
         this._bluetoothManager = bluetoothManager;
         this._leScanner = new MyBluetoothLeScanner();
-        MyLog.debug("MyBluetoothManager.init. bluetoothManager: {}", this._bluetoothManager);
+        MyLog.debug("MyBluetoothManager.init. bluetoothManager: {}, isEnable: {}", this._bluetoothManager, this.isEnabled());
+
 //        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //        activity.startActivityForResult(enableBtIntent, 1);
         this._deviceMap = new HashMap<>(8);

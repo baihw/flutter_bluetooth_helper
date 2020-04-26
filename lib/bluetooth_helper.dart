@@ -88,6 +88,13 @@ class BluetoothHelper {
     this._isWaitingScan = true;
   }
 
+  /// 保活
+  Future<bool> keepAlive() async {
+    Map _res = await callMethod("keepAlive");
+    bool _val = getResultData(_res);
+    return _val;
+  }
+
   /// 扫描设备，获取扫描结果。
   Future<List<BluetoothDevice>> scan({String deviceName, String deviceId, int timeout = 1}) async {
     Map _res = await callMethod("startScan", {"deviceName": deviceName, "deviceId": deviceId});

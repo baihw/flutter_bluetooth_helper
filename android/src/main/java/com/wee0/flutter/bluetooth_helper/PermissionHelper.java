@@ -37,23 +37,6 @@ final class PermissionHelper {
     }
 
     /**
-     * 权限请求响应结果处理
-     *
-     * @param requestCode
-     * @param permissions
-     * @param grantResults
-     * @return
-     */
-    public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        MyLog.debug("permissions: {}", permissions);
-        MyLog.debug("grantResults: {}", grantResults);
-        if (!this._requests.containsKey(requestCode)) return false;
-        ICallback _callback = this._requests.remove(requestCode);
-        if (null != _callback) _callback.execute(PackageManager.PERMISSION_GRANTED == grantResults[0]);
-        return true;
-    }
-
-    /**
      * 应用安装后第一次访问，则直接返回false；
      * 第一次请求权限时，用户Deny了，再次调用shouldShowRequestPermissionRationale()，则返回true；
      * 第二次请求权限时，用户Deny了，并选择了“dont ask me again”的选项时，再次调用shouldShowRequestPermissionRationale()时，返回false；
@@ -75,6 +58,29 @@ final class PermissionHelper {
         return PlatformHelper.me().getApplication().getPackageManager().hasSystemFeature(feature);
     }
 
+    /**
+     * 权限请求响应结果处理
+     *
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     * @return
+     */
+    public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        MyLog.debug("permissions: {}", permissions);
+        MyLog.debug("grantResults: {}", grantResults);
+        if (!this._requests.containsKey(requestCode)) return false;
+        ICallback _callback = this._requests.remove(requestCode);
+        if (null != _callback) _callback.execute(PackageManager.PERMISSION_GRANTED == grantResults[0]);
+        return true;
+    }
+
+//    static void startAppSettings() {
+//        Intent _intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//        _intent.setData(Uri.parse("package:" + PlatformHelper.me().getApplication().getPackageName()));
+//        PlatformHelper.me().getApplication().startActivity(_intent);
+//    }
+
     // 根据权限字符串，计算一个数字值作为请求代码
     private static int buildRequestCode(String val) {
         int _result = 0;
@@ -83,6 +89,7 @@ final class PermissionHelper {
         }
         return _result;
     }
+
 
     /************************************************************
      ************* 单例对象。
