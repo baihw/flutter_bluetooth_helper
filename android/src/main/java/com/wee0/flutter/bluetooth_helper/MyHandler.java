@@ -15,6 +15,11 @@ final class MyHandler {
     public static final int ID_SCAN_TIMEOUT = 0;
 
     /**
+     * 结束后台扫描
+     */
+    public static final int ID_BACKGROUND_SCAN_STOP = 4;
+
+    /**
      * 连接超时
      */
     public static final int ID_CONNECT_TIMEOUT = 1;

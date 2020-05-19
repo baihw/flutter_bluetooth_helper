@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.SystemClock;
 
 import java.io.ObjectStreamException;
-import java.util.Calendar;
 
 /**
  * 自定义闹钟管理器
@@ -16,7 +15,7 @@ final class MyAlarmManager {
 
     // 默认间隔
 //    private static final long DEF_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
-    private static final long DEF_INTERVAL = 15000L;
+    private static final long DEF_INTERVAL = 5000L;
 
     private final AlarmManager alarmManager;
     private PendingIntent alarmIntent;
@@ -24,20 +23,40 @@ final class MyAlarmManager {
     void start() {
         if (null != this.alarmIntent) return;
 
-        Intent _intent = new Intent(PlatformHelper.me().getApplication(), MyAlarmIntentService.class);
-        _intent.setAction(MyAlarmIntentService.ACTION_DEFAULT);
-        PendingIntent _pendingIntent = PendingIntent.getService(PlatformHelper.me().getApplication(), 0, _intent, PendingIntent.FLAG_NO_CREATE);
-        if (null != _pendingIntent) {
-            MyLog.debug("already exists pendingIntent: {}", _pendingIntent);
-            return;
+        Context _context = PlatformHelper.me().getActivity();
+
+//        Intent _intent = new Intent(_context, MyAlarmReceiver.class);
+        Intent _intent = new Intent(_context, MyAlarmService.class);
+        _intent.setAction(MyAlarmService.ACTION_DEFAULT);
+        PendingIntent _pendingIntent = null;
+        if (PlatformHelper.sdkGE26()) {
+            _context.startForegroundService(_intent);
+            _pendingIntent = PendingIntent.getForegroundService(_context, 1, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            _context.startService(_intent);
+            _pendingIntent = PendingIntent.getService(_context, 1, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
         }
+//        PendingIntent _pendingIntent = PendingIntent.getService(PlatformHelper.me().getActivity(), 0, _intent, PendingIntent.FLAG_NO_CREATE);
+//        if (null != _pendingIntent) {
+//            MyLog.debug("already exists pendingIntent: {}", _pendingIntent);
+//            return;
+//        }
+//        this.alarmIntent = PendingIntent.getBroadcast(_context, 0, _intent, 0);
+        this.alarmIntent = _pendingIntent;
+        this.alarmManager.cancel(_pendingIntent);
 
 //        ComponentName _alarmReceiver = new ComponentName(PlatformHelper.me().getApplication(), MyAlarmReceiver.class);
 //        PackageManager _packageManager = PlatformHelper.me().getApplication().getPackageManager();
 //        _packageManager.setComponentEnabledSetting(_alarmReceiver, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-        MyLog.debug("MyAlarmManager start.");
-        this.alarmIntent = PendingIntent.getBroadcast(PlatformHelper.me().getApplication(), 0, _intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        this.alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, System.currentTimeMillis(), DEF_INTERVAL, this.alarmIntent);
+
+//        long _nextTime = SystemClock.elapsedRealtime() + DEF_INTERVAL;
+        long _nextTime = System.currentTimeMillis() + DEF_INTERVAL;
+        MyLog.debug("MyAlarmManager nextTime: {}, intent: {}, pendingIntent: {}", _nextTime, _intent, _pendingIntent);
+
+//        MyLog.debug("FLAG_ONE_SHOT:{}, FLAG_NO_CREATE:{}, FLAG_UPDATE_CURRENT:{}, FLAG_CANCEL_CURRENT{}, FLAG_IMMUTABLE:{}.", PendingIntent.FLAG_ONE_SHOT, PendingIntent.FLAG_NO_CREATE, PendingIntent.FLAG_UPDATE_CURRENT, PendingIntent.FLAG_CANCEL_CURRENT, PendingIntent.FLAG_IMMUTABLE);
+//        this.alarmManager.set(AlarmManager.RTC_WAKEUP, _nextTime, this.alarmIntent);
+        this.alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, _nextTime, DEF_INTERVAL, _pendingIntent);
+//        this.alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, _nextTime, DEF_INTERVAL, _pendingIntent);
     }
 
     void stop() {

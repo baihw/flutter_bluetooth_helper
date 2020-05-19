@@ -51,7 +51,7 @@ final class MyBluetoothDevice {
                 // 释放资源
                 disconnect();
             }
-            MyMethodRouter.me().callOnStateChange(device.getAddress(), newState);
+            MyMethodRouter.me().callOnDeviceStateChange(device.getAddress(), newState);
         }
 
         @Override

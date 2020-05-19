@@ -12,6 +12,8 @@
     <!-- android9(API级别 28)以下 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-<!--    <service android:name=".MyAlarmIntentService" android:exported="false"></service>-->
+<!-- <service android:name="com.wee0.flutter.bluetooth_helper.MyAlarmService" android:exported="false" /> -->
+<!-- <receiver android:name="com.wee0.flutter.bluetooth_helper.MyAlarmReceiver" android:enabled="false" />-->
 </manifest>

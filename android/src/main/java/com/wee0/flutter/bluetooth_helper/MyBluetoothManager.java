@@ -5,8 +5,17 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
 import java.io.ObjectStreamException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,6 +31,33 @@ final class MyBluetoothManager {
     private BluetoothAdapter _bluetoothAdapter;
     private MyBluetoothLeScanner _leScanner = null;
     private Map<String, MyBluetoothDevice> _deviceMap;
+    private String _lastVisitDeviceAddress = null;
+
+    private final BroadcastReceiver _receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String _action = intent.getAction();
+            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(_action)) {
+                final int _state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                MyLog.debug("onStateChange, state: {}", _state);
+                switch (_state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        MyMethodRouter.me().callOnStateChange(0);
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        MyMethodRouter.me().callOnStateChange(1);
+                        // 蓝牙刚打开时，自动执行一次随机扫描。
+                        _backgroundScan();
+                        break;
+//                    case BluetoothAdapter.STATE_TURNING_OFF:
+//                    case BluetoothAdapter.STATE_TURNING_ON:
+                    default:
+                        MyLog.debug("ignore state: {}", _state);
+                        break;
+                }
+            }
+        }
+    };
 
     /**
      * 初始化逻辑
@@ -37,6 +73,9 @@ final class MyBluetoothManager {
 //        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //        activity.startActivityForResult(enableBtIntent, 1);
         this._deviceMap = new HashMap<>(8);
+
+        IntentFilter _filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+        PlatformHelper.me().getActivity().registerReceiver(_receiver, _filter);
     }
 
     /**
@@ -54,12 +93,16 @@ final class MyBluetoothManager {
         this._leScanner = null;
         this._bluetoothAdapter = null;
         this._bluetoothManager = null;
+        if (null != PlatformHelper.me().getActivity()) PlatformHelper.me().getActivity().unregisterReceiver(_receiver);
     }
 
     // 获取设备连接状态
     int getConnectionState(BluetoothDevice device) {
-        // BluetoothProfile.STATE_DISCONNECTED
-        return this._bluetoothManager.getConnectionState(device, BluetoothProfile.GATT);
+        try {
+            return this._bluetoothManager.getConnectionState(device, BluetoothProfile.GATT);
+        } catch (Exception e) {
+            return BluetoothProfile.STATE_DISCONNECTED;
+        }
     }
 
     // 根据地址获取设备对象
@@ -94,6 +137,7 @@ final class MyBluetoothManager {
     public MyBluetoothDevice cacheDevice(String address) {
         if (null == address || 0 == (address = address.trim()).length())
             throw new IllegalArgumentException("device address can not be empty!");
+        this._lastVisitDeviceAddress = address;
         MyBluetoothDevice _myDevice = this._deviceMap.get(address);
         if (null == _myDevice) {
             BluetoothDevice _device = this._bluetoothAdapter.getRemoteDevice(address);
@@ -138,6 +182,85 @@ final class MyBluetoothManager {
      */
     public Map<String, Map<String, String>> stopScan() {
         return this._leScanner.stopScan();
+    }
+
+    // 后台扫描结果回调方法
+    private ScanCallback _backgroundScanCallback = null;
+
+    /**
+     * 执行后台扫描
+     */
+    private void _backgroundScan() {
+        if (null != this._backgroundScanCallback) {
+            MyLog.debug("already exists background scan.");
+            return;
+        }
+        if (!MyLocationManager.me.isEnabled()) {
+            MyLog.debug("location is not enable, skip background scan.");
+            return;
+        }
+        final BluetoothLeScanner _leScanner;
+        if (null == _getBluetoothAdapter() || null == (_leScanner = _getBluetoothAdapter().getBluetoothLeScanner())) {
+            MyLog.debug("BluetoothLeScanner is not found, skip background scan.");
+            return;
+        }
+
+        this._backgroundScanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+//                MyLog.debug("background scan result: {}", result);
+                super.onScanResult(callbackType, result);
+                if (null != _lastVisitDeviceAddress) {
+                    BluetoothDevice _device = result.getDevice();
+                    if (null == _device) return;
+                    if (_lastVisitDeviceAddress.equals(_device.getAddress())) {
+                        MyLog.debug("stop background scan by find device: {}.", _lastVisitDeviceAddress);
+                        MyHandler.me().removeCallback(MyHandler.ID_BACKGROUND_SCAN_STOP);
+                        try {
+                            _leScanner.stopScan(_backgroundScanCallback);
+                        } catch (IllegalStateException e) {
+                            MyLog.debug("stopScan error: {}", e.getMessage());
+                        }
+                        _backgroundScanCallback = null;
+                    }
+                }
+            }
+        };
+
+        List<ScanFilter> _scanFilters = null;
+
+        if (null != this._lastVisitDeviceAddress) {
+            ScanFilter.Builder _filterBuilder = new ScanFilter.Builder();
+            _filterBuilder.setDeviceAddress(this._lastVisitDeviceAddress);
+            _scanFilters = new ArrayList<>();
+            _scanFilters.add(_filterBuilder.build());
+        }
+
+        ScanSettings.Builder _settingsBuilder = new ScanSettings.Builder();
+        _settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
+
+        _leScanner.startScan(_scanFilters, _settingsBuilder.build(), this._backgroundScanCallback);
+        long _delayMillis = null == _scanFilters ? 2000 : 30000;
+        MyHandler.me().delayed(MyHandler.ID_BACKGROUND_SCAN_STOP, _delayMillis, new ICallback() {
+            @Override
+            public void execute(Object args) {
+                MyLog.debug("stop background scan by timeout.");
+                try {
+                    _leScanner.stopScan(_backgroundScanCallback);
+                } catch (IllegalStateException e) {
+                    MyLog.debug("stopScan error: {}", e.getMessage());
+                }
+                _backgroundScanCallback = null;
+            }
+        });
+    }
+
+    /**
+     * @return 获取蓝牙适配器
+     */
+    private BluetoothAdapter _getBluetoothAdapter() {
+        if (null == this._bluetoothAdapter) this._bluetoothAdapter = this._bluetoothManager.getAdapter();
+        return this._bluetoothAdapter;
     }
 
     /************************************************************

@@ -1,7 +1,6 @@
 package com.wee0.flutter.bluetooth_helper;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.Application;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;

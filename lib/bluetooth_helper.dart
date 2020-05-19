@@ -31,14 +31,19 @@ class BluetoothHelper {
     _streamController = StreamController<BluetoothEvent>.broadcast();
 
     _basicMessageChannel.setMessageHandler((_msg) {
-      debug("_msg:$_msg");
+      debug("handle _msg:$_msg");
       if (null == _msg) return;
       String _methodName = _msg[KEY_METHOD];
       switch (_methodName) {
         case "onStateChange":
           Map _data = _msg[KEY_ARGS];
 //          print("stateChange: $_data");
-          _streamController.sink.add(BluetoothEventStateChange(_data["deviceId"], _data["deviceState"]));
+          _streamController.sink.add(BluetoothEventStateChange(_data["state"]));
+          break;
+        case "onDeviceStateChange":
+          Map _data = _msg[KEY_ARGS];
+//          print("deviceStateChange: $_data");
+          _streamController.sink.add(BluetoothEventDeviceStateChange(_data["deviceId"], _data["deviceState"]));
           break;
         case "onCharacteristicNotifyData":
           Map _data = _msg[KEY_ARGS];
@@ -96,7 +101,7 @@ class BluetoothHelper {
   }
 
   /// 扫描设备，获取扫描结果。
-  Future<List<BluetoothDevice>> scan({String deviceName, String deviceId, int timeout = 1}) async {
+  Future<List<BluetoothDevice>> scan({String deviceName, String deviceId, int timeout = 2}) async {
     Map _res = await callMethod("startScan", {"deviceName": deviceName, "deviceId": deviceId});
     getResultData(_res);
 
@@ -221,8 +226,31 @@ class BluetoothEvent {
   }
 }
 
-/// 状态改变事件
+/// 蓝牙状态改变事件
 class BluetoothEventStateChange extends BluetoothEvent {
+  static const int TYPE = 0;
+
+  // 关闭
+  static const int STATE_OFF = 0;
+
+  // 开启
+  static const int STATE_ON = 1;
+
+  // 状态
+  final int _state;
+
+  BluetoothEventStateChange(this._state) : super(TYPE, null);
+
+  int get state => _state;
+
+  @override
+  String toString() {
+    return "BluetoothEventStateChange{state:$state}";
+  }
+}
+
+/// 设备状态改变事件
+class BluetoothEventDeviceStateChange extends BluetoothEvent {
   static const int TYPE = 1;
 
   // 未连接
@@ -240,13 +268,13 @@ class BluetoothEventStateChange extends BluetoothEvent {
   // 状态
   final int _state;
 
-  BluetoothEventStateChange(String deviceId, this._state) : super(TYPE, deviceId);
+  BluetoothEventDeviceStateChange(String deviceId, this._state) : super(TYPE, deviceId);
 
   int get state => _state;
 
   @override
   String toString() {
-    return "BluetoothEventStateChange{deviceId:$_deviceId, state:$state}";
+    return "BluetoothEventDeviceStateChange{deviceId:$_deviceId, state:$state}";
   }
 }
 

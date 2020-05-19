@@ -2,6 +2,8 @@ package com.wee0.flutter.bluetooth_helper;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.os.Build;
 
 import java.io.ObjectStreamException;
@@ -39,6 +41,13 @@ final class PlatformHelper {
         return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
+    /**
+     * @return sdk版本是否大于等于26
+     */
+    public static boolean sdkGE26() {
+        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+    }
+
     /******************************
      * 非静态部分
      ******************************/
@@ -59,6 +68,14 @@ final class PlatformHelper {
 
     public Activity getActivity() {
         return this._activity;
+    }
+
+    /**
+     * @return 获取系统通知服务管理对象
+     */
+    public NotificationManager getNotificationManager() {
+        if (null == this._application) return null;
+        return (NotificationManager) this._application.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     /**

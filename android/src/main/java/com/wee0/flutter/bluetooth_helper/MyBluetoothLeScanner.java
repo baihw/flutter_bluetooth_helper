@@ -132,7 +132,13 @@ final class MyBluetoothLeScanner {
         this._callbackRegTime = 0;
         this.scanning = false;
         MyHandler.me().removeCallback(MyHandler.ID_SCAN_TIMEOUT);
-        if (null != this.scanner) this.scanner.stopScan(_scanCallback);
+        if (null != this.scanner) {
+            try {
+                this.scanner.stopScan(_scanCallback);
+            } catch (IllegalStateException e) {
+                MyLog.debug("stopScan error: {}", e.getMessage());
+            }
+        }
         return this.scanData;
     }
 

@@ -26,6 +26,8 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <service android:name=".MyAlarmIntentService" ></service>
+
+        <service android:name="com.wee0.flutter.bluetooth_helper.MyAlarmService" android:exported="true" />
+        <receiver android:name="com.wee0.flutter.bluetooth_helper.MyAlarmReceiver" android:enabled="true" />
     </application>
 </manifest>

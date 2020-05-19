@@ -28,6 +28,7 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
     static final String KEY_ARGS = "args";
 
     static final String C_onStateChange = "onStateChange";
+    static final String C_onDeviceStateChange = "onDeviceStateChange";
     static final String C_onServicesDiscovered = "onServicesDiscovered";
     static final String C_onCharacteristicNotifyData = "onCharacteristicNotifyData";
     static final String C_onCharacteristicReadResult = "onCharacteristicReadResult";
@@ -180,12 +181,19 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
         });
     }
 
-    /// 状态变化时的通知
-    void callOnStateChange(String deviceId, int deviceState) {
+    /// 蓝牙状态变化时的通知
+    void callOnStateChange(int state) {
+        Map<String, Object> _data = new HashMap<>(2);
+        _data.put("state", state);
+        callMethod(C_onStateChange, _data);
+    }
+
+    /// 设备状态变化时的通知
+    void callOnDeviceStateChange(String deviceId, int deviceState) {
         Map<String, Object> _data = new HashMap<>(2);
         _data.put("deviceId", deviceId);
         _data.put("deviceState", deviceState);
-        callMethod(C_onStateChange, _data);
+        callMethod(C_onDeviceStateChange, _data);
     }
 
     /// 发现服务时的通知

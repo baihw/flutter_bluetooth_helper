@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'bluetooth_helper.dart';
 
 /// 当前蓝牙相关事件回调通知
@@ -18,7 +17,7 @@ class BluetoothDevice {
   EventCallback _eventCallback;
 
   // 连接状态
-  int _connectState = BluetoothEventStateChange.STATE_DISCONNECTED;
+  int _deviceState = BluetoothEventDeviceStateChange.STATE_DISCONNECTED;
 
   // ignore: cancel_subscriptions
   StreamSubscription _subscription;
@@ -61,18 +60,27 @@ class BluetoothDevice {
   /// 设置事件回调处理函数
   set eventCallback(EventCallback eventCallback) => this._eventCallback = eventCallback;
 
+  /// 设备状态
+  int get deviceState => this._deviceState;
+
   /// 是否已连接
-  bool get isConnected => BluetoothEventStateChange.STATE_CONNECTED == this._connectState;
+  bool get isConnected => BluetoothEventDeviceStateChange.STATE_CONNECTED == this._deviceState;
+
+  /// 是否正在建立连接。。。
+  bool get isConnecting => BluetoothEventDeviceStateChange.STATE_CONNECTING == this._deviceState;
+
+  /// 是否已经断开连接.
+  bool get isDisconnected => BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState;
 
   /// 蓝牙事件处理
   void _onEventHandle(BluetoothEvent event) {
-    if (this._deviceId != event.deviceId) {
-      BluetoothHelper.debug("ingore event: $event");
+    if (event.type != BluetoothEventStateChange.TYPE && this._deviceId != event.deviceId) {
+      BluetoothHelper.debug("device $_deviceName ingore event: $event");
       return;
     }
-    BluetoothHelper.debug("onEventHandle: $event");
+    BluetoothHelper.debug("device $_deviceName onEventHandle: $event");
     if (null != this._eventCallback) this._eventCallback(event);
-    if (event is BluetoothEventStateChange && BluetoothEventStateChange.STATE_DISCONNECTED == event.state) {
+    if (event is BluetoothEventDeviceStateChange && BluetoothEventDeviceStateChange.STATE_DISCONNECTED == event.state) {
       this.disconnect();
       return;
     }
@@ -85,12 +93,12 @@ class BluetoothDevice {
 
   /// 建立连接
   Future<bool> connect([int timeout = 3]) async {
-    BluetoothHelper.debug("connect to id:${this._deviceId}, name:${this.deviceName}, state:${this._connectState}");
-    if (BluetoothEventStateChange.STATE_CONNECTED == this._connectState) {
+    BluetoothHelper.debug("connect to id:${this._deviceId}, name:${this.deviceName}, state:${this._deviceState}");
+    if (BluetoothEventDeviceStateChange.STATE_CONNECTED == this._deviceState) {
       BluetoothHelper.debug("already connected!");
       return true;
     }
-    if (BluetoothEventStateChange.STATE_CONNECTING == this._connectState) {
+    if (BluetoothEventDeviceStateChange.STATE_CONNECTING == this._deviceState) {
       BluetoothHelper.debug("already connecting!");
       return false;
     }
@@ -98,17 +106,24 @@ class BluetoothDevice {
       BluetoothHelper.debug("waiting scan!");
       return false;
     }
-    this._connectState = BluetoothEventStateChange.STATE_CONNECTING;
-    bool _connectResult = await BluetoothHelper.me.connect(this._deviceId, timeout);
-    if (_connectResult) {
-      this._connectState = BluetoothEventStateChange.STATE_CONNECTED;
+    this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTING;
+    try {
+      bool _connectResult = await BluetoothHelper.me.connect(this._deviceId, timeout);
+      BluetoothHelper.debug("bluetoooth_device connect result: $_connectResult");
+      if (_connectResult) {
+        this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTED;
 //      this._failCount = 0;
-      if (null == this._subscription) this._subscription = BluetoothHelper.me.events.listen(_onEventHandle);
-    } else {
+        if (null == this._subscription) this._subscription = BluetoothHelper.me.events.listen(_onEventHandle);
+      } else {
 //      if (this._failCount++ > _failCountDefThreshold && !BluetoothHelper.me.isWaitingScan) BluetoothHelper.me.waitingScan();
+        this.disconnect();
+      }
+      return _connectResult;
+    } catch (_err) {
+      BluetoothHelper.debug("bluetoooth_device connect error: $_err");
       this.disconnect();
+      return false;
     }
-    return _connectResult;
   }
 
   /// 发现所有服务特征码
@@ -145,9 +160,9 @@ class BluetoothDevice {
 
   /// 断开连接
   Future<bool> disconnect() async {
-    if (BluetoothEventStateChange.STATE_DISCONNECTED == this._connectState) return false;
+    if (BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState) return false;
     BluetoothHelper.debug("disconnect...");
-    this._connectState = BluetoothEventStateChange.STATE_DISCONNECTED;
+    this._deviceState = BluetoothEventDeviceStateChange.STATE_DISCONNECTED;
     if (null != this._subscription) {
       this._subscription.cancel();
       this._subscription = null;
