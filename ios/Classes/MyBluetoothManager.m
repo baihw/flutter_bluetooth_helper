@@ -69,7 +69,7 @@
 }
 
 - (int)getDeviceState:(NSString *)deviceId {
-    BOOL isConnected = [deviceId isEqualToString:self.currentPeripheral.name] && self.connected;
+    BOOL isConnected = [deviceId isEqualToString:self.currentPeripheral.identifier.UUIDString] && self.connected;
     return isConnected ? 1 : 0;
 }
 
@@ -79,6 +79,7 @@
     } else {
         self.currentPeripheral = nil;
         [MyLog log:@"not found device"];
+        self.connectCallback = callback;
         [self p_handleConnectPeripheral:NO];
         return;
     }
@@ -100,7 +101,7 @@
     [self.centralManager connectPeripheral:self.currentPeripheral options:nil];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         if (nil != self.connectCallback) {
-            self.connectCallback([[BasicMessageChannelReply sharedReply] success:@NO]);
+            self.connectCallback([[BasicMessageChannelReply sharedReply] success:[NSNumber numberWithBool:NO]]);
             self.connectCallback = nil;
         }
         [self disconnect:self.deviceId];
@@ -130,15 +131,19 @@
 
 - (BOOL)disconnect:(NSString *)deviceId {
     BOOL disconnectResult = NO;
-    if ([deviceId isEqualToString:self.currentPeripheral.name]) {
+    if (self.currentPeripheral != nil && [deviceId isEqualToString:self.currentPeripheral.identifier.UUIDString]) {
         [self.centralManager cancelPeripheralConnection:self.currentPeripheral];
+        disconnectResult = YES;
+        self.connected = NO;
+        [self.characteristicDict removeAllObjects];
+    } else {
         disconnectResult = YES;
     }
     return disconnectResult;
 }
 
 - (BOOL)characteristicSetNotification:(NSString *)characteristicId enable:(BOOL)enable {
-    if (![self.characteristicDict.allKeys containsObject:characteristicId]) {
+    if (![self.characteristicDict.allKeys containsObject:characteristicId] || !self.connected) {
         return NO;
     }
     CBCharacteristic *characteristic = self.characteristicDict[characteristicId];
@@ -148,7 +153,7 @@
 }
 
 - (BOOL)characteristicRead:(NSString *)characteristicId {
-    if (![self.characteristicDict.allKeys containsObject:characteristicId]) {
+    if (![self.characteristicDict.allKeys containsObject:characteristicId] || !self.connected) {
         return NO;
     }
     CBCharacteristic *characteristic = self.characteristicDict[characteristicId];
@@ -157,7 +162,7 @@
 }
 
 - (BOOL)characteristicWrite:(NSString *)characteristicId value:(FlutterStandardTypedData *)value withoutResponse:(BOOL)withoutResponse {
-    if (![self.characteristicDict.allKeys containsObject:characteristicId]) {
+    if (![self.characteristicDict.allKeys containsObject:characteristicId] || !self.connected) {
         return NO;
     }
     CBCharacteristic *characteristic = self.characteristicDict[characteristicId];
@@ -305,7 +310,7 @@
 - (void)p_handleConnectPeripheral:(BOOL)connected {
     self.connected = connected;
     if (nil != self.connectCallback) {
-        self.connectCallback([[BasicMessageChannelReply sharedReply] success:@(connected)]);
+        self.connectCallback([[BasicMessageChannelReply sharedReply] success:[NSNumber numberWithBool:connected]]);
         self.connectCallback = nil;
     }
     [[MyMethodRouter shared] callOnDeviceStateChange:self.deviceId deviceState:connected ? 1 : 0];

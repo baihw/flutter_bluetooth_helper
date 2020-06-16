@@ -62,20 +62,20 @@
     [MyLog log:@"invoke method: %@", method];
     if ([BluetoothConstantsMethodDebug isEqualToString:method]) {
         [MyLog enableDebug];
-        callback([reply success:@YES]);
+        callback([reply success:[NSNumber numberWithBool:YES]]);
         return;
     }
     if ([BluetoothConstantsMethodKeepAlive isEqualToString:method]) {
         // iOS后台保活系统自动处理
-        callback([reply success:@YES]);
+        callback([reply success:[NSNumber numberWithBool:YES]]);
         return;
     }
     if ([BluetoothConstantsMethodBluetoothIsEnable isEqualToString:method]) {
-        [reply success:@([[MyBluetoothManager shared] isEnabled])];
+        [reply success:[NSNumber numberWithBool:[[MyBluetoothManager shared] isEnabled]]];
         return;
     }
     if ([BluetoothConstantsMethodLocationIsEnable isEqualToString:method]) {
-        [reply success:@([[MyLocationManager shared] isEnabled])];
+        [reply success:[NSNumber numberWithBool:[[MyLocationManager shared] isEnabled]]];
         return;
     }
     if ([BluetoothConstantsMethodStartScan isEqualToString:method]) {
@@ -93,7 +93,7 @@
             }
         }
         [[MyBluetoothManager shared] startScan:deviceName deviceId:deviceId];
-        callback([reply success:@YES]);
+        callback([reply success:[NSNumber numberWithBool:YES]]);
         return;
     }
     if ([BluetoothConstantsMethodStopScan isEqualToString:method]) {
@@ -115,7 +115,7 @@
     }
     if ([BluetoothConstantsMethodGetDeviceState isEqualToString:method]) {
         int deviceState = [[MyBluetoothManager shared] getDeviceState:deviceId];
-        callback([reply success:@(deviceState)]);
+        callback([reply success:[NSNumber numberWithBool:deviceState]]);
         return;
     }
     if ([BluetoothConstantsMethodConnect isEqualToString:method]) {
@@ -134,25 +134,25 @@
         NSString *characteristicId = args[BluetoothConstantsKeyCharacteristicId];
         BOOL enable = [args[@"enable"] boolValue];
         BOOL setCharacteristicNotificationResult = [[MyBluetoothManager shared] characteristicSetNotification:characteristicId enable:enable];
-        callback([reply success:@(setCharacteristicNotificationResult)]);
+        callback([reply success:[NSNumber numberWithBool:setCharacteristicNotificationResult]]);
         return;
     }
     if ([BluetoothConstantsMethodCharacteristicRead isEqualToString:method]) {
         NSString *characteristicId = args[BluetoothConstantsKeyCharacteristicId];
         BOOL characteristicReadResult = [[MyBluetoothManager shared] characteristicRead:characteristicId];
-        callback([reply success:@(characteristicReadResult)]);
+        callback([reply success:[NSNumber numberWithBool:characteristicReadResult]]);
         return;
     }
     if ([BluetoothConstantsMethodCharacteristicWrite isEqualToString:method]) {
         NSString *characteristicId = args[BluetoothConstantsKeyCharacteristicId];
         FlutterStandardTypedData *data = args[BluetoothConstantsKeyData];
         BOOL characteristicWriteResult = [[MyBluetoothManager shared] characteristicWrite:characteristicId value:data withoutResponse:NO];
-        callback([reply success:@(characteristicWriteResult)]);
+        callback([reply success:[NSNumber numberWithBool:characteristicWriteResult]]);
         return;
     }
     if ([BluetoothConstantsMethodDisonnect isEqualToString:method]) {
         BOOL disconnectResult = [[MyBluetoothManager shared] disconnect:deviceId];
-        callback([reply success:@(disconnectResult)]);
+        callback([reply success:[NSNumber numberWithBool:disconnectResult]]);
         return;
     }
     callback([reply error:[NSString stringWithFormat:@"unKnow method: %@", method]]);
@@ -186,6 +186,9 @@
 
 /// 设备状态变化时的通知
 - (void)callOnDeviceStateChange:(NSString *)deviceId deviceState:(int)deviceState {
+    if (deviceId == nil) {
+        return;
+    }
     NSDictionary *args = @{
         BluetoothConstantsKeyDeviceId: deviceId,
         BluetoothConstantsKeyDeviceState: @(deviceState)
