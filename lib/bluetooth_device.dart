@@ -75,7 +75,7 @@ class BluetoothDevice {
   /// 蓝牙事件处理
   void _onEventHandle(BluetoothEvent event) {
     if (event.type != BluetoothEventStateChange.TYPE && this._deviceId != event.deviceId) {
-      BluetoothHelper.debug("device $_deviceName ingore event: $event");
+      BluetoothHelper.debug("device $_deviceName ignore event: $event");
       return;
     }
     BluetoothHelper.debug("device $_deviceName onEventHandle: $event");
@@ -109,7 +109,7 @@ class BluetoothDevice {
     this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTING;
     try {
       bool _connectResult = await BluetoothHelper.me.connect(this._deviceId, timeout);
-      BluetoothHelper.debug("bluetoooth_device connect result: $_connectResult");
+      BluetoothHelper.debug("bluetooth_device connect result: $_connectResult");
       if (_connectResult) {
         this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTED;
 //      this._failCount = 0;
@@ -120,7 +120,7 @@ class BluetoothDevice {
       }
       return _connectResult;
     } catch (_err) {
-      BluetoothHelper.debug("bluetoooth_device connect error: $_err");
+      BluetoothHelper.debug("bluetooth_device connect error: $_err");
       this.disconnect();
       return false;
     }
