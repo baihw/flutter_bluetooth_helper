@@ -71,11 +71,11 @@
         return;
     }
     if ([BluetoothConstantsMethodBluetoothIsEnable isEqualToString:method]) {
-        [reply success:[NSNumber numberWithBool:[[MyBluetoothManager shared] isEnabled]]];
+        callback([reply success:[NSNumber numberWithBool:[[MyBluetoothManager shared] isEnabled]]]);
         return;
     }
     if ([BluetoothConstantsMethodLocationIsEnable isEqualToString:method]) {
-        [reply success:[NSNumber numberWithBool:[[MyLocationManager shared] isEnabled]]];
+        callback([reply success:[NSNumber numberWithBool:[[MyLocationManager shared] isEnabled]]]);
         return;
     }
     if ([BluetoothConstantsMethodStartScan isEqualToString:method]) {
