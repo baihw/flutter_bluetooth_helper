@@ -25,7 +25,7 @@
 @property (nonatomic, copy) FlutterReply discoverServicesCallback;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, CBCharacteristic *> *characteristicDict;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSDictionary *> *scanData;
-@property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *scanedPeripheralDict;
+@property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *scannedPeripheralDict;
 
 @end
 
@@ -59,7 +59,7 @@
     self.deviceName = deviceName ?: @"";
     self.deviceId = deviceId ?: @"";
     [self.scanData removeAllObjects];
-    [self.scanedPeripheralDict removeAllObjects];
+    [self.scannedPeripheralDict removeAllObjects];
     [self.centralManager scanForPeripheralsWithServices:nil options:nil];
 }
 
@@ -69,13 +69,13 @@
 }
 
 - (int)getDeviceState:(NSString *)deviceId {
-    BOOL isConnected = [deviceId isEqualToString:self.currentPeripheral.name] && self.currentPeripheral.state == CBPeripheralStateConnected;
+    BOOL isConnected = [deviceId isEqualToString:self.currentPeripheral.name] && self.connected;
     return isConnected ? 1 : 0;
 }
 
 - (void)connect:(NSString *)deviceId timeout:(int)timeout callback:(FlutterReply _Nonnull)callback {
-    if ([self.scanedPeripheralDict.allKeys containsObject:deviceId]) {
-        self.currentPeripheral = self.scanedPeripheralDict[deviceId];
+    if ([self.scannedPeripheralDict.allKeys containsObject:deviceId]) {
+        self.currentPeripheral = self.scannedPeripheralDict[deviceId];
     } else {
         self.currentPeripheral = nil;
         [MyLog log:@"not found device"];
@@ -278,7 +278,7 @@
     [MyLog log:@"scanned peripheral: %@", peripheral];
     NSString *identifier = peripheral.identifier.UUIDString;
     if (identifier != nil && ![self.scanData.allKeys containsObject:identifier]) {
-        [self.scanedPeripheralDict setObject:peripheral forKey:identifier];
+        [self.scannedPeripheralDict setObject:peripheral forKey:identifier];
         NSDictionary *peripheralDict = @{
             BluetoothConstantsKeyDeviceId: identifier,
             BluetoothConstantsKeyDeviceName: peripheral.name ?: identifier
@@ -308,7 +308,7 @@
         self.connectCallback([[BasicMessageChannelReply sharedReply] success:@(connected)]);
         self.connectCallback = nil;
     }
-    [[MyMethodRouter shared] callOnDeviceStateChange:self.deviceId deviceState:[self getDeviceState:self.deviceId]];
+    [[MyMethodRouter shared] callOnDeviceStateChange:self.deviceId deviceState:connected ? 1 : 0];
 }
 
 #pragma mark - Lazy Loading
@@ -334,11 +334,11 @@
     return _scanData;
 }
 
-- (NSMutableDictionary<NSString *,CBPeripheral *> *)scanedPeripheralDict {
-    if (_scanedPeripheralDict == nil) {
-        _scanedPeripheralDict = [NSMutableDictionary dictionary];
+- (NSMutableDictionary<NSString *,CBPeripheral *> *)scannedPeripheralDict {
+    if (_scannedPeripheralDict == nil) {
+        _scannedPeripheralDict = [NSMutableDictionary dictionary];
     }
-    return _scanedPeripheralDict;
+    return _scannedPeripheralDict;
 }
 
 @end
