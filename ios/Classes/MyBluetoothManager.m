@@ -82,13 +82,13 @@
         self.currentPeripheral = nil;
         [MyLog log:@"not found device"];
         self.connectCallback = callback;
-        [self p_handleConnectPeripheral:NO];
+        [self p_handleConnectPeripheral:NO deviceId:deviceId];
         return;
     }
     if (self.connected) {
         [MyLog log:@"already connected!"];
         self.connectCallback = callback;
-        [self p_handleConnectPeripheral:YES];
+        [self p_handleConnectPeripheral:YES deviceId:deviceId];
         return;
     }
     if (nil != self.connectCallback) {
@@ -306,21 +306,20 @@
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
-    [self p_handleConnectPeripheral:YES];
-    
+    [self p_handleConnectPeripheral:YES deviceId:peripheral.identifier.UUIDString];
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(nullable NSError *)error {
-    [self p_handleConnectPeripheral:NO];
+    [self p_handleConnectPeripheral:NO deviceId:peripheral.identifier.UUIDString];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
-    [self p_handleConnectPeripheral:NO];
+    [self p_handleConnectPeripheral:NO deviceId:peripheral.identifier.UUIDString];
 }
 
 #pragma mark - Private Method
 
-- (void)p_handleConnectPeripheral:(BOOL)connected {
+- (void)p_handleConnectPeripheral:(BOOL)connected deviceId:(NSString *)deviceId {
     self.connected = connected;
     if (nil != self.connectCallback) {
         self.connectCallback([[BasicMessageChannelReply sharedReply] success:[NSNumber numberWithBool:connected]]);

@@ -180,7 +180,7 @@
 /// 蓝牙状态变化时的通知
 - (void)callOnStateChange:(int)state {
     NSDictionary *args = @{
-        BluetoothConstantsKeyState: @(state)
+        BluetoothConstantsKeyState: [NSNumber numberWithInt:state]
     };
     [self callMethod:BluetoothConstantsMethodOnStateChange args:args];
 }
@@ -192,7 +192,7 @@
     }
     NSDictionary *args = @{
         BluetoothConstantsKeyDeviceId: deviceId,
-        BluetoothConstantsKeyDeviceState: @(deviceState)
+        BluetoothConstantsKeyDeviceState: [NSNumber numberWithInt:deviceState]
     };
     [self callMethod:BluetoothConstantsMethodOnDeviceStateChange args:args];
 }
