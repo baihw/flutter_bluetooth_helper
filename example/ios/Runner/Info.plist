@@ -22,6 +22,21 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>请允许本应用使用蓝牙，我们将通过蓝牙传输监测的温度信息</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>请允许本应用使用蓝牙，我们将通过蓝牙传输监测的温度信息</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>请允许本应用使用定位，我们将通过定位获取您的位置信息，确保您没有离开指定区域</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>请允许本应用使用定位，我们将通过定位获取您的位置信息，确保您没有离开指定区域</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>请允许本应用使用定位，我们将通过定位获取您的位置信息，确保您没有离开指定区域</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>location</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
