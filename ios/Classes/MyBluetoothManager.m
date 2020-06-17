@@ -283,7 +283,7 @@
             self.isAuthorized = YES;
             [[MyMethodRouter shared] callOnStateChange:1];
             [MyLog log:@">>>CBCentralManagerStatePoweredOn"];
-//            [self.centralManager scanForPeripheralsWithServices:nil options:nil];
+            [self.centralManager scanForPeripheralsWithServices:nil options:nil];
         }
             break;
         default:
