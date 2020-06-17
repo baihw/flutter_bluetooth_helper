@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bluetooth_helper/bluetooth_device.dart';
 import 'package:bluetooth_helper/bluetooth_helper.dart';
@@ -23,8 +24,12 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     BluetoothHelper.enableDebug();
 
-    _device = BluetoothDevice.create("CC:98:3E:9B:60:0C", "ZLY_2003020101351");
-//    _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
+    if (Platform.isAndroid) {
+      _device = BluetoothDevice.create("CC:98:3E:9B:60:0C", "ZLY_2003020101351");
+//      _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
+    } else {
+      _device = BluetoothDevice.create("ED293FE6-090B-5EF3-23FE-E0551D06C2AD", "ZLY_2002020101020");
+    }
     _device.eventCallback = (BluetoothEvent event) {
       print("event: $event");
     };
