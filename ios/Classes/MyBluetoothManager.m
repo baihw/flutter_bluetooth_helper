@@ -78,7 +78,7 @@
 - (void)connect:(NSString *)deviceId timeout:(int)timeout callback:(FlutterReply _Nonnull)callback {
     if ([self.scannedPeripheralDict.allKeys containsObject:deviceId]) {
         self.currentPeripheral = self.scannedPeripheralDict[deviceId];
-    } else {
+    } else if (![self.currentPeripheral.identifier.UUIDString isEqualToString:deviceId]) {
         self.currentPeripheral = nil;
         [MyLog log:@"not found device"];
         self.connectCallback = callback;
@@ -325,7 +325,7 @@
         self.connectCallback([[BasicMessageChannelReply sharedReply] success:[NSNumber numberWithBool:connected]]);
         self.connectCallback = nil;
     }
-    [[MyMethodRouter shared] callOnDeviceStateChange:self.deviceId deviceState:connected ? 1 : 0];
+    [[MyMethodRouter shared] callOnDeviceStateChange:deviceId deviceState:connected ? 1 : 0];
 }
 
 #pragma mark - Lazy Loading
