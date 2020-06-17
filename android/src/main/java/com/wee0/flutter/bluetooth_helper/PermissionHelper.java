@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.ObjectStreamException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,8 +68,8 @@ final class PermissionHelper {
      * @return
      */
     public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        MyLog.debug("permissions: {}", permissions);
-        MyLog.debug("grantResults: {}", grantResults);
+        MyLog.debug("permissions: {}", Arrays.toString(permissions));
+        MyLog.debug("grantResults: {}", Arrays.toString(grantResults));
         if (!this._requests.containsKey(requestCode)) return false;
         ICallback _callback = this._requests.remove(requestCode);
         if (null != _callback) _callback.execute(PackageManager.PERMISSION_GRANTED == grantResults[0]);

@@ -25,6 +25,11 @@ final class MyBluetoothException extends RuntimeException {
      */
     static final String CODE_CONNECT_FIRST = "603";
 
+    /**
+     * 用户拒绝授予定位权限
+     */
+    static final String CODE_LOCATION_NOT_GRANTED = "604";
+
     // 错误编码
     final String code;
 
