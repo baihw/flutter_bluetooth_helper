@@ -170,8 +170,9 @@
     } else {
         [self.paramsDict removeObjectForKey:BluetoothConstantsKeyArgs];
     }
+    NSDictionary *paramsDict = self.paramsDict.copy;
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.messageChannel sendMessage:self.paramsDict];
+        [self.messageChannel sendMessage:paramsDict];
     });
 }
 
@@ -230,7 +231,7 @@
     NSDictionary *args = @{
         BluetoothConstantsKeyDeviceId: deviceId,
         BluetoothConstantsKeyCharacteristicId: characteristicId,
-        BluetoothConstantsKeyIsOk: @(isOk)
+        BluetoothConstantsKeyIsOk: [NSNumber numberWithBool:isOk]
     };
     [self callMethod:BluetoothConstantsMethodOnCharacteristicWriteResult args:args];
 }

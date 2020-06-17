@@ -23,6 +23,8 @@
 @property (nonatomic, assign) BOOL connected;
 @property (nonatomic, copy) FlutterReply connectCallback;
 @property (nonatomic, copy) FlutterReply discoverServicesCallback;
+/** 记录读取的特征id */
+@property (nonatomic, copy) NSString *readCharacteristicId;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, CBCharacteristic *> *characteristicDict;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSDictionary *> *scanData;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, CBPeripheral *> *scannedPeripheralDict;
@@ -103,8 +105,8 @@
         if (nil != self.connectCallback) {
             self.connectCallback([[BasicMessageChannelReply sharedReply] success:[NSNumber numberWithBool:NO]]);
             self.connectCallback = nil;
+            [self disconnect:deviceId];
         }
-        [self disconnect:self.deviceId];
     });
 }
 
@@ -157,6 +159,7 @@
         return NO;
     }
     CBCharacteristic *characteristic = self.characteristicDict[characteristicId];
+    self.readCharacteristicId = characteristicId;
     [characteristic.service.peripheral readValueForCharacteristic:characteristic];
     return YES;
 }
@@ -210,12 +213,22 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(nonnull CBCharacteristic *)characteristic error:(nullable NSError *)error {
-    if (error) {
-        [MyLog log:@"onCharacteristicRead error: %@", error];
-        return;
+    if ([self.readCharacteristicId isEqualToString:characteristic.UUID.UUIDString]) {
+        self.readCharacteristicId = nil;
+        if (error) {
+            [MyLog log:@"onCharacteristicRead error: %@", error];
+            return;
+        }
+        [MyLog log:@"onCharacteristicRead success: %@", characteristic];
+        [[MyMethodRouter shared] callOnCharacteristicReadResult:peripheral.identifier.UUIDString characteristicId:characteristic.UUID.UUIDString data:characteristic.value];
+    } else {
+        if (error) {
+            [MyLog log:@"onCharacteristicNotify error: %@", error];
+            return;
+        }
+        [MyLog log:@"onCharacteristicNotify success: %@", characteristic];
+        [[MyMethodRouter shared] callOnCharacteristicNotifyData:peripheral.identifier.UUIDString characteristicId:characteristic.UUID.UUIDString data:characteristic.value];
     }
-    [MyLog log:@"onCharacteristicRead success: %@", characteristic];
-    [[MyMethodRouter shared] callOnCharacteristicReadResult:peripheral.name characteristicId:characteristic.UUID.UUIDString data:characteristic.value];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
@@ -227,7 +240,7 @@
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
-    [[MyMethodRouter shared] callOnCharacteristicWriteResult:peripheral.name characteristicId:characteristic.UUID.UUIDString isOk:error == nil];
+    [[MyMethodRouter shared] callOnCharacteristicWriteResult:peripheral.identifier.UUIDString characteristicId:characteristic.UUID.UUIDString isOk:error == nil];
     if (error) {
         [MyLog log:@"write value for characteristic error: %@", error];
         return;
