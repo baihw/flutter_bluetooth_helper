@@ -21,7 +21,7 @@ import java.util.Map;
  */
 final class MyBluetoothDevice {
 
-    BluetoothGatt gatt;
+    BluetoothGatt gatt1;
     boolean connected = false;
     // 特征对象集合
     Map<String, BluetoothGattCharacteristic> characteristicMap = new HashMap<>(16, 1.0f);
@@ -34,7 +34,7 @@ final class MyBluetoothDevice {
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            MyLog.debug("onConnectionStateChange status: {}, newState: {}, gatt: {}", status, newState, gatt);
+            MyLog.debug("onConnectionStateChange status: {}, newState: {}, gatt: {}, gatt1: {}", status, newState, gatt, gatt1);
             MyHandler.me().removeCallback(MyHandler.ID_CONNECT_TIMEOUT);
             if (BluetoothProfile.STATE_CONNECTED == newState) {
                 connected = true;
@@ -48,15 +48,16 @@ final class MyBluetoothDevice {
                     currentReply.success(false);
                     currentReply = null;
                 }
-                // 释放资源
-                disconnect();
+//                // 释放资源
+//                disconnect();
+                gatt.close();
             }
             MyMethodRouter.me().callOnDeviceStateChange(device.getAddress(), newState);
         }
 
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            MyLog.debug("onServicesDiscovered status: {}, gatt: {}", status, gatt);
+            MyLog.debug("onServicesDiscovered status: {}, gatt: {}, gatt1: {}", status, gatt, gatt1);
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 List<BluetoothGattService> _gattServices = gatt.getServices();
                 MyLog.debug("_gattServices: {}", _gattServices);
@@ -83,13 +84,13 @@ final class MyBluetoothDevice {
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            MyLog.debug("onCharacteristicChanged characteristic: {}, gatt: {}", characteristic, gatt);
+            MyLog.debug("onCharacteristicChanged characteristic: {}, gatt: {}, gatt1: {}", characteristic, gatt, gatt1);
             MyMethodRouter.me().callOnCharacteristicNotifyData(device.getAddress(), characteristic.getUuid().toString(), characteristic.getValue());
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            MyLog.debug("onCharacteristicRead status: {}, characteristic: {}, gatt: {}", status, characteristic, gatt);
+            MyLog.debug("onCharacteristicRead status: {}, characteristic: {}, gatt: {}, gatt1: {}", status, characteristic, gatt, gatt1);
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 MyMethodRouter.me().callOnCharacteristicReadResult(device.getAddress(), characteristic.getUuid().toString(), characteristic.getValue());
             }
@@ -97,7 +98,7 @@ final class MyBluetoothDevice {
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            MyLog.debug("onCharacteristicWrite status: {}, characteristic: {}, gatt: {}", status, characteristic, gatt);
+            MyLog.debug("onCharacteristicWrite status: {}, characteristic: {}, gatt: {}, gatt1: {}", status, characteristic, gatt, gatt1);
             MyMethodRouter.me().callOnCharacteristicWriteResult(device.getAddress(), characteristic.getUuid().toString(), BluetoothGatt.GATT_SUCCESS == status);
             if (BluetoothGatt.GATT_SUCCESS == status) {
                 MyLog.debug("write ok: {}", characteristic.getValue());
@@ -108,13 +109,14 @@ final class MyBluetoothDevice {
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            MyLog.debug("onDescriptorWrite status: {}, descriptor: {}, gatt: {}", status, descriptor, gatt);
+            MyLog.debug("onDescriptorWrite status: {}, descriptor: {}, gatt: {}, gatt1: {}", status, descriptor, gatt, gatt1);
             super.onDescriptorWrite(gatt, descriptor, status);
         }
     };
 
     MyBluetoothDevice(BluetoothDevice bluetoothDevice) {
-        if (null == bluetoothDevice) throw new IllegalArgumentException("bluetoothDevice can not be null!");
+        if (null == bluetoothDevice)
+            throw new IllegalArgumentException("bluetoothDevice can not be null!");
         this.device = bluetoothDevice;
     }
 
@@ -137,9 +139,10 @@ final class MyBluetoothDevice {
             return;
         }
 
-        if (!MyBluetoothManager.me().isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
+        if (!MyBluetoothManager.me().isEnabled())
+            throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
 
-        if (null != this.gatt) {
+        if (null != this.gatt1) {
             // 可能之前建立连接未成功，也未释放资源，先释放资源，再重新连接。
             this.disconnect();
         }
@@ -147,9 +150,9 @@ final class MyBluetoothDevice {
         this.currentReply = reply;
 
         if (PlatformHelper.sdkGE23()) {
-            this.gatt = this.device.connectGatt(PlatformHelper.me().getActivity(), false, this.gattCallback, BluetoothDevice.TRANSPORT_LE);
+            this.gatt1 = this.device.connectGatt(PlatformHelper.me().getActivity(), false, this.gattCallback, BluetoothDevice.TRANSPORT_LE);
         } else {
-            this.gatt = this.device.connectGatt(PlatformHelper.me().getActivity(), false, this.gattCallback);
+            this.gatt1 = this.device.connectGatt(PlatformHelper.me().getActivity(), false, this.gattCallback);
         }
 
         MyHandler.me().delayed(MyHandler.ID_CONNECT_TIMEOUT, timeout * 1000, new ICallback() {
@@ -189,7 +192,7 @@ final class MyBluetoothDevice {
         }
         this.currentReply = reply;
         this.characteristicMap.clear();
-        this.gatt.discoverServices();
+        this.gatt1.discoverServices();
 
         MyHandler.me().delayed(MyHandler.ID_DISCOVER_SERVICES_TIMEOUT, timeout * 1000, new ICallback() {
             @Override
@@ -213,13 +216,13 @@ final class MyBluetoothDevice {
         if (!this.characteristicMap.containsKey(characteristicId)) return false;
         BluetoothGattCharacteristic _characteristic = this.characteristicMap.get(characteristicId);
 
-        boolean _setNotificationResult = this.gatt.setCharacteristicNotification(_characteristic, enable);
+        boolean _setNotificationResult = this.gatt1.setCharacteristicNotification(_characteristic, enable);
         MyLog.debug(characteristicId + " setNotificationResult: {}", _setNotificationResult);
         BluetoothGattDescriptor _gattDescriptor = _characteristic.getDescriptor(BluetoothConstants.descCharacteristicClientConfig);
         if (null != _gattDescriptor) {
             byte[] _value = enable ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
             _gattDescriptor.setValue(_value);
-            return gatt.writeDescriptor(_gattDescriptor);
+            return this.gatt1.writeDescriptor(_gattDescriptor);
         }
         return false;
     }
@@ -234,7 +237,7 @@ final class MyBluetoothDevice {
         if (!this.characteristicMap.containsKey(characteristicId)) return false;
         BluetoothGattCharacteristic _characteristic = this.characteristicMap.get(characteristicId);
 
-        return this.gatt.readCharacteristic(_characteristic);
+        return this.gatt1.readCharacteristic(_characteristic);
     }
 
     /**
@@ -260,7 +263,7 @@ final class MyBluetoothDevice {
             _characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         }
 
-        return this.gatt.writeCharacteristic(_characteristic);
+        return this.gatt1.writeCharacteristic(_characteristic);
     }
 
     /**
@@ -272,24 +275,33 @@ final class MyBluetoothDevice {
         this.connected = false;
         this.currentReply = null;
         MyHandler.me().removeCallback(MyHandler.ID_CONNECT_TIMEOUT);
-        if (null == this.gatt) return false;
-        MyLog.debug("disconnect gatt for : {}", this.device);
-        this.gatt.disconnect();
-        int _connectionState = MyBluetoothManager.me().getConnectionState(this.device);
-        if (BluetoothProfile.STATE_DISCONNECTED == _connectionState && null != this.gatt) {
-            MyLog.debug("close gatt for : {}", this.device);
-            this.gatt.close();
+        if (null == this.gatt1) {
+            MyLog.debug("device {} already disconnected.", this.device);
+            return false;
         }
-        this.gatt = null;
+        MyLog.debug("device {} disconnect gatt.", this.device);
+        this.gatt1.disconnect();
+        int _connectionState = MyBluetoothManager.me().getConnectionState(this.device);
+        boolean _isDisconnected = (BluetoothProfile.STATE_DISCONNECTED == _connectionState);
+        MyLog.debug("device {} isDisconnected ? {}", this.device, _isDisconnected);
+        if (_isDisconnected) {
+            MyLog.debug("device {} close gatt.", this.device);
+            try {
+                this.gatt1.close();
+            } catch (Exception e) {
+                MyLog.warn("device {} close gatt error: {}", this.device, e.getMessage());
+            }
+        }
+        this.gatt1 = null;
         return true;
     }
 
     // 刷新系统蓝牙设备缓存信息。
     boolean _refreshCache() {
         try {
-            Method _refreshMethod = this.gatt.getClass().getMethod("refresh");
+            Method _refreshMethod = this.gatt1.getClass().getMethod("refresh");
             if (null != _refreshMethod) {
-                return (Boolean) _refreshMethod.invoke(this.gatt);
+                return (Boolean) _refreshMethod.invoke(this.gatt1);
             }
         } catch (Exception _e) {
             MyLog.debug("refreshing device error: {}", _e.getMessage());
@@ -306,7 +318,7 @@ final class MyBluetoothDevice {
     public String toString() {
         StringBuilder _builder = new StringBuilder();
         _builder.append("MyBluetoothDevice{device:").append(this.device);
-        _builder.append(",gatt:").append(this.gatt);
+        _builder.append(",gatt1:").append(this.gatt1);
         _builder.append("}");
         return _builder.toString();
     }

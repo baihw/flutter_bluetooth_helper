@@ -58,29 +58,35 @@ class BluetoothDevice {
   String get deviceName => this._deviceName;
 
   /// 设置事件回调处理函数
-  set eventCallback(EventCallback eventCallback) => this._eventCallback = eventCallback;
+  set eventCallback(EventCallback eventCallback) =>
+      this._eventCallback = eventCallback;
 
   /// 设备状态
   int get deviceState => this._deviceState;
 
   /// 是否已连接
-  bool get isConnected => BluetoothEventDeviceStateChange.STATE_CONNECTED == this._deviceState;
+  bool get isConnected =>
+      BluetoothEventDeviceStateChange.STATE_CONNECTED == this._deviceState;
 
   /// 是否正在建立连接。。。
-  bool get isConnecting => BluetoothEventDeviceStateChange.STATE_CONNECTING == this._deviceState;
+  bool get isConnecting =>
+      BluetoothEventDeviceStateChange.STATE_CONNECTING == this._deviceState;
 
   /// 是否已经断开连接.
-  bool get isDisconnected => BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState;
+  bool get isDisconnected =>
+      BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState;
 
   /// 蓝牙事件处理
   void _onEventHandle(BluetoothEvent event) {
-    if (event.type != BluetoothEventStateChange.TYPE && this._deviceId != event.deviceId) {
+    if (event.type != BluetoothEventStateChange.TYPE &&
+        this._deviceId != event.deviceId) {
       BluetoothHelper.debug("device $_deviceName ignore event: $event");
       return;
     }
     BluetoothHelper.debug("device $_deviceName onEventHandle: $event");
     if (null != this._eventCallback) this._eventCallback(event);
-    if (event is BluetoothEventDeviceStateChange && BluetoothEventDeviceStateChange.STATE_DISCONNECTED == event.state) {
+    if (event is BluetoothEventDeviceStateChange &&
+        BluetoothEventDeviceStateChange.STATE_DISCONNECTED == event.state) {
       this.disconnect();
       return;
     }
@@ -88,12 +94,18 @@ class BluetoothDevice {
 
   // 读取数据返回结果数据
   Stream<List<int>> get _readResultStream async* {
-    yield* BluetoothHelper.me.events.where((_event) => _event.type == BluetoothEventReadResult.TYPE && this._deviceId == _event.deviceId).cast<BluetoothEventReadResult>().map((_event) => _event.data);
+    yield* BluetoothHelper.me.events
+        .where((_event) =>
+            _event.type == BluetoothEventReadResult.TYPE &&
+            this._deviceId == _event.deviceId)
+        .cast<BluetoothEventReadResult>()
+        .map((_event) => _event.data);
   }
 
   /// 建立连接
   Future<bool> connect([int timeout = 3]) async {
-    BluetoothHelper.debug("connect to id:${this._deviceId}, name:${this.deviceName}, state:${this._deviceState}");
+    BluetoothHelper.debug(
+        "connect to id:${this._deviceId}, name:${this.deviceName}, state:${this._deviceState}");
     if (BluetoothEventDeviceStateChange.STATE_CONNECTED == this._deviceState) {
       BluetoothHelper.debug("already connected!");
       return true;
@@ -108,12 +120,14 @@ class BluetoothDevice {
     }
     this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTING;
     try {
-      bool _connectResult = await BluetoothHelper.me.connect(this._deviceId, timeout);
+      bool _connectResult =
+          await BluetoothHelper.me.connect(this._deviceId, timeout);
       BluetoothHelper.debug("bluetooth_device connect result: $_connectResult");
       if (_connectResult) {
         this._deviceState = BluetoothEventDeviceStateChange.STATE_CONNECTED;
 //      this._failCount = 0;
-        if (null == this._subscription) this._subscription = BluetoothHelper.me.events.listen(_onEventHandle);
+        if (null == this._subscription)
+          this._subscription = BluetoothHelper.me.events.listen(_onEventHandle);
       } else {
 //      if (this._failCount++ > _failCountDefThreshold && !BluetoothHelper.me.isWaitingScan) BluetoothHelper.me.waitingScan();
         this.disconnect();
@@ -132,13 +146,16 @@ class BluetoothDevice {
   }
 
   /// 设置特征监听
-  Future<bool> setCharacteristicNotification(String characteristicId, [bool enable = true]) async {
-    return BluetoothHelper.me.setCharacteristicNotification(this._deviceId, characteristicId, enable);
+  Future<bool> setCharacteristicNotification(String characteristicId,
+      [bool enable = true]) async {
+    return BluetoothHelper.me.setCharacteristicNotification(
+        this._deviceId, characteristicId, enable);
   }
 
   /// 特征数据读取
   Future<List<int>> characteristicRead(String characteristicId) async {
-    bool _readResult = await BluetoothHelper.me.characteristicRead(this._deviceId, characteristicId);
+    bool _readResult = await BluetoothHelper.me
+        .characteristicRead(this._deviceId, characteristicId);
     if (!_readResult) {
       BluetoothHelper.debug("read error!");
       return null;
@@ -147,20 +164,27 @@ class BluetoothDevice {
   }
 
   /// 特征数据写入
-  Future<bool> characteristicWrite(String characteristicId, List<int> data) async {
-    bool _write = await BluetoothHelper.me.characteristicWrite(this._deviceId, characteristicId, data);
+  Future<bool> characteristicWrite(
+      String characteristicId, List<int> data) async {
+    bool _write = await BluetoothHelper.me
+        .characteristicWrite(this._deviceId, characteristicId, data);
     if (!_write) {
       BluetoothHelper.debug("write error!");
       return false;
     }
-    BluetoothEventWriteResult _writeResult = await BluetoothHelper.me.events.where((_event) => _event.type == BluetoothEventWriteResult.TYPE && this._deviceId == _event.deviceId).first;
+    BluetoothEventWriteResult _writeResult = await BluetoothHelper.me.events
+        .where((_event) =>
+            _event.type == BluetoothEventWriteResult.TYPE &&
+            this._deviceId == _event.deviceId)
+        .first;
     BluetoothHelper.debug("writeResult: $_writeResult");
     return _writeResult.isOk;
   }
 
   /// 断开连接
   Future<bool> disconnect() async {
-    if (BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState) return false;
+    if (BluetoothEventDeviceStateChange.STATE_DISCONNECTED == this._deviceState)
+      return false;
     BluetoothHelper.debug("disconnect...");
     this._deviceState = BluetoothEventDeviceStateChange.STATE_DISCONNECTED;
     if (null != this._subscription) {

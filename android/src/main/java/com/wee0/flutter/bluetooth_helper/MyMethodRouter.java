@@ -69,7 +69,7 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
                 return;
             }
             if ("keepAlive".equals(_method)) {
-                MyAlarmManager.me().start();
+//                MyAlarmManager.me().start();
                 _reply.success(true);
                 return;
             }

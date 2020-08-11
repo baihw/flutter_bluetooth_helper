@@ -22,27 +22,27 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    BluetoothHelper.enableDebug();
+//    BluetoothHelper.enableDebug();
 
     if (Platform.isAndroid) {
-      _device = BluetoothDevice.create("CC:98:3E:9B:60:0C", "ZLY_2003020101351");
-//      _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
+//      _device = BluetoothDevice.create("CC:98:3E:9B:60:0C", "ZLY_2003020101351");
+      _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
     } else {
       _device = BluetoothDevice.create("ED293FE6-090B-5EF3-23FE-E0551D06C2AD", "ZLY_2002020101020");
     }
     _device.eventCallback = (BluetoothEvent event) {
       print("event: $event");
     };
-    _timer = Timer.periodic(Duration(seconds: 20), (_timer) {
-//      BluetoothHelper.me.scan().then((List<BluetoothDevice> _scanResult) {
-//        print("${_timer.tick} scanResult: $_scanResult");
-//        if (!mounted) return;
-//        setState(() {
-//          _deviceList = _scanResult;
-//        });
-//      });
-      print("device isConnected: ${_device.isConnected}");
-    });
+//    _timer = Timer.periodic(Duration(seconds: 20), (_timer) {
+////      BluetoothHelper.me.scan().then((List<BluetoothDevice> _scanResult) {
+////        print("${_timer.tick} scanResult: $_scanResult");
+////        if (!mounted) return;
+////        setState(() {
+////          _deviceList = _scanResult;
+////        });
+////      });
+//      print("device isConnected: ${_device.isConnected}");
+//    });
   }
 
   @override
@@ -57,12 +57,12 @@ class _MyAppState extends State<MyApp> {
             Text('Bluetooth Test...'),
             Row(
               children: <Widget>[
-                RaisedButton(
-                  child: Text("keepAlive"),
-                  onPressed: () {
-                    BluetoothHelper.me.keepAlive().then((_res) => print("keepAlive: $_res"));
-                  },
-                ),
+//                RaisedButton(
+//                  child: Text("keepAlive"),
+//                  onPressed: () {
+//                    BluetoothHelper.me.keepAlive().then((_res) => print("keepAlive: $_res"));
+//                  },
+//                ),
                 RaisedButton(
                   child: Text("scan"),
                   onPressed: () => BluetoothHelper.me.scan(timeout: 2).then((List<BluetoothDevice> _res) {
