@@ -67,7 +67,7 @@ final class MyBluetoothLeScanner {
         return this.scanData;
     }
 
-    void startScan(final String deviceName, final String deviceAddress) {
+    void startScan(final String deviceName, final String deviceAddress, final IReply reply) {
         if (this.scanning) {
             MyLog.debug("already scanning!");
             return;
@@ -82,12 +82,17 @@ final class MyBluetoothLeScanner {
             if (PermissionHelper.me().requestPermission(PermissionHelper.ACCESS_FINE_LOCATION, new ICallback() {
                 @Override
                 public void execute(Object args) {
-                    if (!(Boolean) args) throw new IllegalStateException("requires location permissions for scanning.");
+                    if (!(Boolean) args) {
+                        MyLog.warn("requires location permissions for scanning.");
+                        if (null != reply)
+                            reply.error(MyBluetoothException.CODE_LOCATION_NOT_GRANTED, "requires location permissions for scanning.");
+                        return;
+                    }
                     if (System.currentTimeMillis() - _callbackRegTime > 5000) {
                         MyLog.debug("callback request timeout.");
                         return;
                     }
-                    startScan(deviceName, deviceAddress);
+                    startScan(deviceName, deviceAddress, reply);
                 }
             })) {
                 _callbackRegTime = System.currentTimeMillis();
@@ -120,6 +125,8 @@ final class MyBluetoothLeScanner {
                 stopScan();
             }
         });
+
+        reply.success(true);
     }
 
     /**

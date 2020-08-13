@@ -43,20 +43,24 @@ class BluetoothHelper {
         case "onDeviceStateChange":
           Map _data = _msg[KEY_ARGS];
 //          print("deviceStateChange: $_data");
-          _streamController.sink.add(BluetoothEventDeviceStateChange(_data["deviceId"], _data["deviceState"]));
+          _streamController.sink.add(BluetoothEventDeviceStateChange(
+              _data["deviceId"], _data["deviceState"]));
           break;
         case "onCharacteristicNotifyData":
           Map _data = _msg[KEY_ARGS];
 //          print("characteristicNotifyData: $_data");
-          _streamController.sink.add(BluetoothEventNotifyData(_data["deviceId"], _data["characteristicId"], _data["data"]));
+          _streamController.sink.add(BluetoothEventNotifyData(
+              _data["deviceId"], _data["characteristicId"], _data["data"]));
           break;
         case "onCharacteristicReadResult":
           Map _data = _msg[KEY_ARGS];
-          _streamController.sink.add(BluetoothEventReadResult(_data["deviceId"], _data["characteristicId"], _data["data"]));
+          _streamController.sink.add(BluetoothEventReadResult(
+              _data["deviceId"], _data["characteristicId"], _data["data"]));
           break;
         case "onCharacteristicWriteResult":
           Map _data = _msg[KEY_ARGS];
-          _streamController.sink.add(BluetoothEventWriteResult(_data["deviceId"], _data["characteristicId"], _data["isOk"]));
+          _streamController.sink.add(BluetoothEventWriteResult(
+              _data["deviceId"], _data["characteristicId"], _data["isOk"]));
           break;
         default:
           print("unKnow msg: $_msg");
@@ -72,14 +76,19 @@ class BluetoothHelper {
 
   static BluetoothHelper get me => _me;
 
-  static const BasicMessageChannel _basicMessageChannel = const BasicMessageChannel("bluetooth_helper", StandardMessageCodec());
+  static const BasicMessageChannel _basicMessageChannel =
+      const BasicMessageChannel("bluetooth_helper", StandardMessageCodec());
 
 //  static Map<String, BluetoothDevice> _deviceMap = {};
 
   /// 释放资源
   void destroy() {
-    this._streamController.sink.close().then((_res) => print("BluetoothHelper controller.sink close result:$_res"));
-    this._streamController.close().then((_res) => print("BluetoothHelper controller close result:$_res"));
+    this._streamController.sink.close().then(
+        (_res) => print("BluetoothHelper controller.sink close result:$_res"));
+    this
+        ._streamController
+        .close()
+        .then((_res) => print("BluetoothHelper controller close result:$_res"));
   }
 
   /// 事件流
@@ -101,8 +110,10 @@ class BluetoothHelper {
   }
 
   /// 扫描设备，获取扫描结果。
-  Future<List<BluetoothDevice>> scan({String deviceName, String deviceId, int timeout = 2}) async {
-    Map _res = await callMethod("startScan", {"deviceName": deviceName, "deviceId": deviceId});
+  Future<List<BluetoothDevice>> scan(
+      {String deviceName, String deviceId, int timeout = 2}) async {
+    Map _res = await callMethod(
+        "startScan", {"deviceName": deviceName, "deviceId": deviceId});
     getResultData(_res);
 
     _res = await Future.delayed(Duration(seconds: timeout), () async {
@@ -112,13 +123,17 @@ class BluetoothHelper {
 
     Map _deviceMap = getResultData(_res);
     if (null == _deviceMap || _deviceMap.isEmpty) return [];
-    List<BluetoothDevice> _devices = _deviceMap.values.where((_item) => null != _item["deviceName"]).map((_item) => BluetoothDevice.fromMap(_item)).toList();
+    List<BluetoothDevice> _devices = _deviceMap.values
+        .where((_item) => null != _item["deviceName"])
+        .map((_item) => BluetoothDevice.fromMap(_item))
+        .toList();
     return _devices;
   }
 
   /// 建立连接
   Future<bool> connect(String deviceId, [int timeout = 3]) async {
-    Map _res = await callMethod("connect", {"deviceId": deviceId, "timeout": timeout});
+    Map _res =
+        await callMethod("connect", {"deviceId": deviceId, "timeout": timeout});
     bool _val = getResultData(_res);
     return _val;
   }
@@ -131,29 +146,43 @@ class BluetoothHelper {
   }
 
   /// 发现所有服务特征码
-  Future<List> discoverCharacteristics(String deviceId, [int timeout = 3]) async {
-    Map _res = await callMethod("discoverServices", {"deviceId": deviceId, "timeout": timeout});
+  Future<List> discoverCharacteristics(String deviceId,
+      [int timeout = 3]) async {
+    Map _res = await callMethod(
+        "discoverServices", {"deviceId": deviceId, "timeout": timeout});
     List _val = getResultData(_res);
     return _val;
   }
 
   /// 设置特征监听
-  Future<bool> setCharacteristicNotification(String deviceId, String characteristicId, bool enable) async {
-    Map _res = await callMethod("setCharacteristicNotification", {"deviceId": deviceId, "characteristicId": characteristicId, "enable": enable});
+  Future<bool> setCharacteristicNotification(
+      String deviceId, String characteristicId, bool enable) async {
+    Map _res = await callMethod("setCharacteristicNotification", {
+      "deviceId": deviceId,
+      "characteristicId": characteristicId,
+      "enable": enable
+    });
     bool _val = getResultData(_res);
     return _val;
   }
 
   /// 特征读取
-  Future<bool> characteristicRead(String deviceId, String characteristicId) async {
-    Map _res = await callMethod("characteristicRead", {"deviceId": deviceId, "characteristicId": characteristicId});
+  Future<bool> characteristicRead(
+      String deviceId, String characteristicId) async {
+    Map _res = await callMethod("characteristicRead",
+        {"deviceId": deviceId, "characteristicId": characteristicId});
     bool _val = getResultData(_res);
     return _val;
   }
 
   /// 特征写入
-  Future<bool> characteristicWrite(String deviceId, String characteristicId, List<int> data) async {
-    Map _res = await callMethod("characteristicWrite", {"deviceId": deviceId, "characteristicId": characteristicId, "data": Uint8List.fromList(data)});
+  Future<bool> characteristicWrite(
+      String deviceId, String characteristicId, List<int> data) async {
+    Map _res = await callMethod("characteristicWrite", {
+      "deviceId": deviceId,
+      "characteristicId": characteristicId,
+      "data": Uint8List.fromList(data)
+    });
     bool _val = getResultData(_res);
     return _val;
   }
@@ -189,9 +218,11 @@ class BluetoothHelper {
 
   /// 获取返回数据
   static dynamic getResultData(Map result) {
-    if (null == result) throw PlatformException(code: "600", message: "native result is null!");
+    if (null == result)
+      throw PlatformException(code: "600", message: "native result is null!");
     String _resCode = result[KEY_CODE];
-    if ("200" != _resCode) throw PlatformException(code: _resCode, message: result[KEY_MSG]);
+    if ("200" != _resCode)
+      throw PlatformException(code: _resCode, message: result[KEY_MSG]);
     return result[KEY_DATA];
   }
 
@@ -268,7 +299,8 @@ class BluetoothEventDeviceStateChange extends BluetoothEvent {
   // 状态
   final int _state;
 
-  BluetoothEventDeviceStateChange(String deviceId, this._state) : super(TYPE, deviceId);
+  BluetoothEventDeviceStateChange(String deviceId, this._state)
+      : super(TYPE, deviceId);
 
   int get state => _state;
 
@@ -285,7 +317,9 @@ class BluetoothEventNotifyData extends BluetoothEvent {
   final String _characteristicId;
   final List<int> _data;
 
-  BluetoothEventNotifyData(String deviceId, this._characteristicId, this._data, [int type = TYPE]) : super(type, deviceId);
+  BluetoothEventNotifyData(String deviceId, this._characteristicId, this._data,
+      [int type = TYPE])
+      : super(type, deviceId);
 
   /// 特征标识
   String get characteristicId => _characteristicId;
@@ -306,7 +340,8 @@ class BluetoothEventReadResult extends BluetoothEvent {
   final String _characteristicId;
   final List<int> _data;
 
-  BluetoothEventReadResult(String deviceId, this._characteristicId, this._data) : super(TYPE, deviceId);
+  BluetoothEventReadResult(String deviceId, this._characteristicId, this._data)
+      : super(TYPE, deviceId);
 
   /// 特征标识
   String get characteristicId => _characteristicId;
@@ -327,7 +362,8 @@ class BluetoothEventWriteResult extends BluetoothEvent {
   final String _characteristicId;
   final bool _isOK;
 
-  BluetoothEventWriteResult(String deviceId, this._characteristicId, this._isOK) : super(TYPE, deviceId);
+  BluetoothEventWriteResult(String deviceId, this._characteristicId, this._isOK)
+      : super(TYPE, deviceId);
 
   /// 是否写入成功
   bool get isOk => _isOK;

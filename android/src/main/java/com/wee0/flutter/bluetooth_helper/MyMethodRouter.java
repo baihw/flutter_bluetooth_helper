@@ -69,7 +69,7 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
                 return;
             }
             if ("keepAlive".equals(_method)) {
-                MyAlarmManager.me().start();
+//                MyAlarmManager.me().start();
                 _reply.success(true);
                 return;
             }
@@ -89,8 +89,8 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
                     _deviceName = _args.containsKey("deviceName") ? (String) _args.get("deviceName") : null;
                     _deviceId = _args.containsKey("deviceId") ? (String) _args.get("deviceId") : null;
                 }
-                MyBluetoothManager.me().startScan(_deviceName, _deviceId);
-                _reply.success(true);
+                MyBluetoothManager.me().startScan(_deviceName, _deviceId, _reply);
+//                _reply.success(true);
                 return;
             }
             if ("stopScan".equals(_method)) {
