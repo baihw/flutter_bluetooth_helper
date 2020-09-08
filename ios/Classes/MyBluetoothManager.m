@@ -297,9 +297,10 @@
     NSString *identifier = peripheral.identifier.UUIDString;
     if (identifier != nil && ![self.scanData.allKeys containsObject:identifier]) {
         [self.scannedPeripheralDict setObject:peripheral forKey:identifier];
+        NSString *localName = [advertisementData objectForKey:@"kCBAdvDataLocalName"];
         NSDictionary *peripheralDict = @{
             BluetoothConstantsKeyDeviceId: identifier,
-            BluetoothConstantsKeyDeviceName: peripheral.name ?: identifier
+            BluetoothConstantsKeyDeviceName: localName ?: identifier
         };
         [self.scanData setObject:peripheralDict forKey:identifier];
     }
