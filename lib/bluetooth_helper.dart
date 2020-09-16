@@ -196,6 +196,27 @@ class BluetoothHelper {
 //    return _result;
   }
 
+  /// 开启蓝牙
+  static Future<bool> bluetoothEnable() async {
+    Map _result = await callMethod("bluetoothEnable");
+    bool _isEnable = getResultData(_result);
+    return _isEnable;
+  }
+
+  /// 关闭蓝牙
+  static Future<bool> bluetoothDisable() async {
+    Map _result = await callMethod("bluetoothDisable");
+    bool _isDisable = getResultData(_result);
+    return _isDisable;
+  }
+
+  /// 最后一次蓝牙与gps的的状态改变时间，单位：毫秒。
+  static Future<Map> get stateLastChangeTime async {
+    Map _result = await callMethod("stateLastChangeTime");
+    Map _times = getResultData(_result);
+    return _times;
+  }
+
   /// 蓝牙是否开启
   static Future<bool> get bluetoothIsEnable async {
     Map _result = await callMethod("bluetoothIsEnable");
@@ -205,7 +226,7 @@ class BluetoothHelper {
 
   /// 定位是否开启，蓝牙扫描需要开启定位，否则扫描不到结果。
   static Future<bool> get locationIsEnable async {
-    Map _result = await callMethod("locationIsEnable");
+    Map _result = await callMethod("locationIsEnable", {"requireGps": true});
     bool _isEnable = getResultData(_result);
     return _isEnable;
   }

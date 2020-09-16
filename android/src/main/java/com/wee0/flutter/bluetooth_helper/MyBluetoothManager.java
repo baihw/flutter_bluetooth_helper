@@ -33,6 +33,9 @@ final class MyBluetoothManager {
     private Map<String, MyBluetoothDevice> _deviceMap;
     private String _lastVisitDeviceAddress = null;
 
+    // 最后一次开关时间
+    private long lastChangeTime = 0l;
+
     private final BroadcastReceiver _receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -40,6 +43,7 @@ final class MyBluetoothManager {
             if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(_action)) {
                 final int _state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
                 MyLog.debug("onStateChange, state: {}", _state);
+                lastChangeTime = System.currentTimeMillis();
                 switch (_state) {
                     case BluetoothAdapter.STATE_OFF:
                         MyMethodRouter.me().callOnStateChange(0);
@@ -65,7 +69,8 @@ final class MyBluetoothManager {
      * @param bluetoothManager 托管的蓝牙管理器对象
      */
     void init(BluetoothManager bluetoothManager) {
-        if (null == bluetoothManager) throw new IllegalStateException("bluetoothManager can not be null!");
+        if (null == bluetoothManager)
+            throw new IllegalStateException("bluetoothManager can not be null!");
         this._bluetoothManager = bluetoothManager;
         this._leScanner = new MyBluetoothLeScanner();
         MyLog.debug("MyBluetoothManager.init. bluetoothManager: {}, isEnable: {}", this._bluetoothManager, this.isEnabled());
@@ -93,7 +98,8 @@ final class MyBluetoothManager {
         this._leScanner = null;
         this._bluetoothAdapter = null;
         this._bluetoothManager = null;
-        if (null != PlatformHelper.me().getActivity()) PlatformHelper.me().getActivity().unregisterReceiver(_receiver);
+        if (null != PlatformHelper.me().getActivity())
+            PlatformHelper.me().getActivity().unregisterReceiver(_receiver);
     }
 
     // 获取设备连接状态
@@ -110,13 +116,47 @@ final class MyBluetoothManager {
         return this._bluetoothAdapter.getRemoteDevice(address);
     }
 
+    /**
+     * @return 最后次状态改变时间
+     */
+    long getLastChangeTime(){
+        return lastChangeTime;
+    }
 
     /**
      * @return 蓝牙是否开启
      */
     public boolean isEnabled() {
-        if (null == this._bluetoothAdapter) this._bluetoothAdapter = this._bluetoothManager.getAdapter();
+        if (null == this._bluetoothAdapter)
+            this._bluetoothAdapter = this._bluetoothManager.getAdapter();
         return null != this._bluetoothAdapter && this._bluetoothAdapter.isEnabled();
+    }
+
+    /**
+     * 开启蓝牙
+     *
+     * @return 是否开启
+     */
+    public boolean enable() {
+        if (null == this._bluetoothAdapter)
+            this._bluetoothAdapter = this._bluetoothManager.getAdapter();
+        if (null == this._bluetoothAdapter) return false;
+        if (this._bluetoothAdapter.isEnabled()) return true;
+        return this._bluetoothAdapter.enable();
+    }
+
+    /**
+     * 关闭蓝牙
+     *
+     * @return 是否关闭
+     */
+    public boolean disable() {
+        if (null == this._bluetoothAdapter)
+            this._bluetoothAdapter = this._bluetoothManager.getAdapter();
+        if (null == this._bluetoothAdapter) return false;
+        if (this._bluetoothAdapter.isEnabled())
+            return this._bluetoothAdapter.disable();
+        return true;
     }
 
     public int getDeviceState(String deviceId) {
@@ -165,11 +205,13 @@ final class MyBluetoothManager {
      */
     public void startScan(String deviceName, String deviceAddress, final IReply reply) {
 
-        if (!isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
+        if (!isEnabled())
+            throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
 
         if (null == this._leScanner.getBluetoothLeScanner()) {
             final BluetoothLeScanner _scanner = this._bluetoothAdapter.getBluetoothLeScanner();
-            if (null == _scanner) throw new IllegalStateException("BluetoothLeScanner can not be null!");
+            if (null == _scanner)
+                throw new IllegalStateException("BluetoothLeScanner can not be null!");
             this._leScanner.setBluetoothLeScanner(_scanner);
         }
         this._leScanner.startScan(deviceName, deviceAddress, reply);
@@ -195,7 +237,7 @@ final class MyBluetoothManager {
             MyLog.debug("already exists background scan.");
             return;
         }
-        if (!MyLocationManager.me.isEnabled()) {
+        if (!MyLocationManager.me.isEnabled(true)) {
             MyLog.debug("location is not enable, skip background scan.");
             return;
         }
@@ -259,7 +301,8 @@ final class MyBluetoothManager {
      * @return 获取蓝牙适配器
      */
     private BluetoothAdapter _getBluetoothAdapter() {
-        if (null == this._bluetoothAdapter) this._bluetoothAdapter = this._bluetoothManager.getAdapter();
+        if (null == this._bluetoothAdapter)
+            this._bluetoothAdapter = this._bluetoothManager.getAdapter();
         return this._bluetoothAdapter;
     }
 

@@ -78,7 +78,29 @@ final class MyMethodRouter implements BasicMessageChannel.MessageHandler<Object>
                 return;
             }
             if ("locationIsEnable".equals(_method)) {
-                _reply.success(MyLocationManager.me.isEnabled());
+                boolean _requireGps = true;
+                if (_messageData.containsKey(KEY_ARGS)) {
+                    Map<String, Object> _args = (Map<String, Object>) _messageData.get(KEY_ARGS);
+                    if (_args.containsKey("requireGps")) {
+                        _requireGps = (Boolean) _args.get("requireGps");
+                    }
+                }
+                _reply.success(MyLocationManager.me.isEnabled(_requireGps));
+                return;
+            }
+            if ("bluetoothEnable".equals(_method)) {
+                _reply.success(MyBluetoothManager.me().enable());
+                return;
+            }
+            if ("bluetoothDisable".equals(_method)) {
+                _reply.success(MyBluetoothManager.me().disable());
+                return;
+            }
+            if ("stateLastChangeTime".equals(_method)) {
+                Map<String, Long> _data = new HashMap<>(2);
+                _data.put("bluetoothLastChangeTime", MyBluetoothManager.me().getLastChangeTime());
+                _data.put("locationLastChangeTime", MyLocationManager.me.getLastChangeTime());
+                _reply.success(_data);
                 return;
             }
             if ("startScan".equals(_method)) {

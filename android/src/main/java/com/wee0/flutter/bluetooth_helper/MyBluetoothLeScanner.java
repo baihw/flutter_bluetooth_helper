@@ -78,7 +78,7 @@ final class MyBluetoothLeScanner {
 
         if (0 == this._callbackRegTime) {
             if (!MyBluetoothManager.me().isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
-            if (!MyLocationManager.me.isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_LOCATION_NOT_ENABLE, "please turn on location.");
+            if (!MyLocationManager.me.isEnabled(true)) throw new MyBluetoothException(MyBluetoothException.CODE_LOCATION_NOT_ENABLE, "please turn on location.");
             if (PermissionHelper.me().requestPermission(PermissionHelper.ACCESS_FINE_LOCATION, new ICallback() {
                 @Override
                 public void execute(Object args) {

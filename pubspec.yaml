@@ -1,5 +1,5 @@
 name: bluetooth_helper
-version: 0.1.2
+version: 0.1.3
 description: A Bluetooth Flutter plugin，bluetooth scan、connect、discover、read、write...。
 homepage: https://github.com/baihw/flutter_bluetooth_helper
 
