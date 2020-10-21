@@ -80,7 +80,8 @@ class _MyAppState extends State<MyApp> {
                 RaisedButton(
                   child: Text("scan"),
                   onPressed: () => BluetoothHelper.me
-                      .scan(timeout: 2)
+//                      .scan(timeout: 15)
+                      .scan(deviceId: "E4:E6:CC:B5:49:DF", timeout: 15)
                       .then((List<BluetoothDevice> _res) {
                     for (BluetoothDevice _device in _res) {
                       print("scan device: $_device");

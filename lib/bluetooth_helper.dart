@@ -109,18 +109,32 @@ class BluetoothHelper {
     return _val;
   }
 
+//  /// 扫描设备，获取扫描结果。
+//  Future<List<BluetoothDevice>> _scan(
+//      {String deviceName, String deviceId, int timeout = 2}) async {
+//    Map _res = await callMethod(
+//        "startScan", {"deviceName": deviceName, "deviceId": deviceId});
+//    getResultData(_res);
+//
+//    _res = await Future.delayed(Duration(seconds: timeout), () async {
+//      return await callMethod("stopScan");
+//    });
+//    this._isWaitingScan = false;
+//
+//    Map _deviceMap = getResultData(_res);
+//    if (null == _deviceMap || _deviceMap.isEmpty) return [];
+//    List<BluetoothDevice> _devices = _deviceMap.values
+//        .where((_item) => null != _item["deviceName"])
+//        .map((_item) => BluetoothDevice.fromMap(_item))
+//        .toList();
+//    return _devices;
+//  }
+
   /// 扫描设备，获取扫描结果。
   Future<List<BluetoothDevice>> scan(
       {String deviceName, String deviceId, int timeout = 2}) async {
-    Map _res = await callMethod(
-        "startScan", {"deviceName": deviceName, "deviceId": deviceId});
-    getResultData(_res);
-
-    _res = await Future.delayed(Duration(seconds: timeout), () async {
-      return await callMethod("stopScan");
-    });
-    this._isWaitingScan = false;
-
+    Map _res = await callMethod("startScan",
+        {"deviceName": deviceName, "deviceId": deviceId, "timeout": timeout});
     Map _deviceMap = getResultData(_res);
     if (null == _deviceMap || _deviceMap.isEmpty) return [];
     List<BluetoothDevice> _devices = _deviceMap.values

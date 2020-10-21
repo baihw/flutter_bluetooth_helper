@@ -203,7 +203,7 @@ final class MyBluetoothManager {
     /**
      * 开始扫描
      */
-    public void startScan(String deviceName, String deviceAddress, final IReply reply) {
+    public void startScan(String deviceName, String deviceAddress, int scanTimeout, final IReply reply) {
 
         if (!isEnabled())
             throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
@@ -214,7 +214,7 @@ final class MyBluetoothManager {
                 throw new IllegalStateException("BluetoothLeScanner can not be null!");
             this._leScanner.setBluetoothLeScanner(_scanner);
         }
-        this._leScanner.startScan(deviceName, deviceAddress, reply);
+        this._leScanner.startScan(deviceName, deviceAddress, scanTimeout, reply);
     }
 
     /**
