@@ -41,12 +41,12 @@ final class PlatformHelper {
         return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
-//    /**
-//     * @return sdk版本是否大于等于26
-//     */
-//    public static boolean sdkGE26() {
-//        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-//    }
+    /**
+     * @return sdk版本是否大于等于26
+     */
+    public static boolean sdkGE26() {
+        return android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+    }
 
     /******************************
      * 非静态部分

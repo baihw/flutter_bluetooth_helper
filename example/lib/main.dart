@@ -22,13 +22,15 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-//    BluetoothHelper.enableDebug();
+    BluetoothHelper.enableDebug();
 
     if (Platform.isAndroid) {
 //      _device = BluetoothDevice.create("CC:98:3E:9B:60:0C", "ZLY_2003020101351");
-      _device = BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
+      _device =
+          BluetoothDevice.create("D8:CB:BD:91:D5:D5", "ZLY_2003020101038");
     } else {
-      _device = BluetoothDevice.create("ED293FE6-090B-5EF3-23FE-E0551D06C2AD", "ZLY_2002020101020");
+      _device = BluetoothDevice.create(
+          "ED293FE6-090B-5EF3-23FE-E0551D06C2AD", "ZLY_2002020101020");
     }
     _device.eventCallback = (BluetoothEvent event) {
       print("event: $event");
@@ -57,15 +59,30 @@ class _MyAppState extends State<MyApp> {
             Text('Bluetooth Test...'),
             Row(
               children: <Widget>[
-//                RaisedButton(
-//                  child: Text("keepAlive"),
-//                  onPressed: () {
-//                    BluetoothHelper.me.keepAlive().then((_res) => print("keepAlive: $_res"));
-//                  },
-//                ),
+                RaisedButton(
+                  child: Text("locationIsEnable"),
+                  onPressed: () {
+                    BluetoothHelper.locationIsEnable
+                        .then((_res) => print("locationIsEnable: $_res"));
+                  },
+                ),
+                RaisedButton(
+                  child: Text("stateLastChangeTime"),
+                  onPressed: () {
+                    BluetoothHelper.stateLastChangeTime
+                        .then((_res) => print("stateLastChangeTime: $_res"));
+                  },
+                ),
+              ],
+            ),
+            Row(
+              children: <Widget>[
                 RaisedButton(
                   child: Text("scan"),
-                  onPressed: () => BluetoothHelper.me.scan(timeout: 2).then((List<BluetoothDevice> _res) {
+                  onPressed: () => BluetoothHelper.me
+//                      .scan(timeout: 15)
+                      .scan(deviceId: "E4:E6:CC:B5:49:DF", timeout: 15)
+                      .then((List<BluetoothDevice> _res) {
                     for (BluetoothDevice _device in _res) {
                       print("scan device: $_device");
                     }
@@ -73,14 +90,21 @@ class _MyAppState extends State<MyApp> {
                 ),
                 RaisedButton(
                   child: Text("connect"),
-                  onPressed: () => this._device.connect().then((_res) => print("connect result: $_res")).catchError((_e) {
+                  onPressed: () => this
+                      ._device
+                      .connect()
+                      .then((_res) => print("connect result: $_res"))
+                      .catchError((_e) {
                     print("error: $_e");
                     this._device.disconnect();
                   }),
                 ),
                 RaisedButton(
                   child: Text("disconnect"),
-                  onPressed: () => this._device.disconnect().then((_res) => print("disconnect result: $_res")),
+                  onPressed: () => this
+                      ._device
+                      .disconnect()
+                      .then((_res) => print("disconnect result: $_res")),
                 )
               ],
             ),
@@ -89,7 +113,8 @@ class _MyAppState extends State<MyApp> {
                 RaisedButton(
                   child: Text("discoverCharacteristics"),
                   onPressed: () async {
-                    List _characteristics = await _device.discoverCharacteristics(3);
+                    List _characteristics =
+                        await _device.discoverCharacteristics(3);
                     print("discoverCharacteristics: $_characteristics");
                     for (String _characteristic in _characteristics) {
                       if (0 == _characteristic.indexOf("00001526-")) {
@@ -101,18 +126,34 @@ class _MyAppState extends State<MyApp> {
                     print("read characteristic: $_readCharacteristic");
                     print("write characteristic: $_writeCharacteristic");
                     if (null != _readCharacteristic) {
-                      bool _setResult = await _device.setCharacteristicNotification(_readCharacteristic, true);
+                      bool _setResult =
+                          await _device.setCharacteristicNotification(
+                              _readCharacteristic, true);
                       print("setResult: $_setResult");
                     }
                   },
                 ),
                 RaisedButton(
                   child: Text("read"),
-                  onPressed: () => _device.characteristicRead(_readCharacteristic).then((_res) => print("read result: $_res")),
+                  onPressed: () => _device
+                      .characteristicRead(_readCharacteristic)
+                      .then((_res) => print("read result: $_res")),
                 ),
                 RaisedButton(
                   child: Text("write"),
-                  onPressed: () => _device.characteristicWrite(_writeCharacteristic, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]).then((_res) => print("write result: $_res")),
+                  onPressed: () => _device.characteristicWrite(
+                      _writeCharacteristic, [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                  ]).then((_res) => print("write result: $_res")),
                 ),
               ],
             ),

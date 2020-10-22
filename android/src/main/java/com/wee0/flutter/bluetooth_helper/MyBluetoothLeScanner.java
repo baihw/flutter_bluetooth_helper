@@ -27,6 +27,15 @@ final class MyBluetoothLeScanner {
     // 回调注册时间，用于超时处理
     private long _callbackRegTime = 0;
 
+    // 设备名称
+    private String _deviceAddress = null;
+    // 设备地址
+    private String _deviceName = null;
+    // 扫描超时时间
+    private int _scanTimeout = DEF_MAX_SCAN_TIMEOUT;
+    // 响应对象
+    private IReply _reply = null;
+
     // 扫描结果回调
     private final ScanCallback _scanCallback = new ScanCallback() {
         @Override
@@ -41,6 +50,16 @@ final class MyBluetoothLeScanner {
             _deviceInfo.put("deviceName", _name);
             if (!scanData.containsKey(_address))
                 scanData.put(_address, _deviceInfo);
+            if (null != MyBluetoothLeScanner.this._deviceAddress && MyBluetoothLeScanner.this._deviceAddress.equals(_address)) {
+                MyLog.debug("scanned device id: {}", _address);
+                stopScan();
+                return;
+            }
+            if (null != MyBluetoothLeScanner.this._deviceName && MyBluetoothLeScanner.this._deviceName.equals(_name)) {
+                MyLog.debug("scanned device name: {}", _name);
+                stopScan();
+                return;
+            }
         }
 
         @Override
@@ -67,18 +86,25 @@ final class MyBluetoothLeScanner {
         return this.scanData;
     }
 
-    void startScan(final String deviceName, final String deviceAddress, final IReply reply) {
+    void startScan(final String deviceName, final String deviceAddress, final int scanTimeout, final IReply reply) {
         if (this.scanning) {
             MyLog.debug("already scanning!");
             return;
         }
 
+        this._deviceName = deviceName;
+        this._deviceAddress = deviceAddress;
+        this._scanTimeout = scanTimeout > 0 ? scanTimeout * 1000 : DEF_MAX_SCAN_TIMEOUT;
+        this._reply = reply;
+
         // 清除之前的扫描结果
         this.scanData.clear();
 
         if (0 == this._callbackRegTime) {
-            if (!MyBluetoothManager.me().isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
-            if (!MyLocationManager.me.isEnabled()) throw new MyBluetoothException(MyBluetoothException.CODE_LOCATION_NOT_ENABLE, "please turn on location.");
+            if (!MyBluetoothManager.me().isEnabled())
+                throw new MyBluetoothException(MyBluetoothException.CODE_BLUETOOTH_NOT_ENABLE, "please turn on bluetooth.");
+            if (!MyLocationManager.me.isEnabled(true))
+                throw new MyBluetoothException(MyBluetoothException.CODE_LOCATION_NOT_ENABLE, "please turn on location.");
             if (PermissionHelper.me().requestPermission(PermissionHelper.ACCESS_FINE_LOCATION, new ICallback() {
                 @Override
                 public void execute(Object args) {
@@ -92,7 +118,7 @@ final class MyBluetoothLeScanner {
                         MyLog.debug("callback request timeout.");
                         return;
                     }
-                    startScan(deviceName, deviceAddress, reply);
+                    startScan(deviceName, deviceAddress, MyBluetoothLeScanner.this._scanTimeout, reply);
                 }
             })) {
                 _callbackRegTime = System.currentTimeMillis();
@@ -118,7 +144,7 @@ final class MyBluetoothLeScanner {
         final ScanSettings _scanSettings = _settingsBuilder.build();
         this.scanner.startScan(_scanFilters, _scanSettings, _scanCallback);
 
-        MyHandler.me().delayed(MyHandler.ID_SCAN_TIMEOUT, DEF_MAX_SCAN_TIMEOUT, new ICallback() {
+        MyHandler.me().delayed(MyHandler.ID_SCAN_TIMEOUT, this._scanTimeout, new ICallback() {
             @Override
             public void execute(Object args) {
                 MyLog.debug("scan timeout, to be stop.");
@@ -126,7 +152,7 @@ final class MyBluetoothLeScanner {
             }
         });
 
-        reply.success(true);
+//        reply.success(true);
     }
 
     /**
@@ -145,6 +171,10 @@ final class MyBluetoothLeScanner {
             } catch (IllegalStateException e) {
                 MyLog.debug("stopScan error: {}", e.getMessage());
             }
+        }
+        if (null != this._reply) {
+            this._reply.success(this.scanData);
+            this._reply = null;
         }
         return this.scanData;
     }
