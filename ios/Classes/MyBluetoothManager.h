@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// 单例对象
 + (instancetype)shared;
 /// 开始扫描
-- (void)startScan:(NSString * _Nullable)deviceName deviceId:(NSString * _Nullable)deviceId;
+- (void)startScan:(NSString * _Nullable)deviceName deviceId:(NSString * _Nullable)deviceId timeout:(int)timeout callback:(FlutterReply _Nonnull)callback;
 /// 结束扫描，获取扫描结果
 - (NSDictionary *)stopScan;
 - (int)getDeviceState:(NSString *)deviceId;

@@ -21,6 +21,7 @@
 @property (nonatomic, copy) NSString *deviceName;
 @property (nonatomic, copy) NSString *deviceId;
 @property (nonatomic, assign) BOOL connected;
+@property (nonatomic, copy) FlutterReply scanCallback;
 @property (nonatomic, copy) FlutterReply connectCallback;
 @property (nonatomic, copy) FlutterReply discoverServicesCallback;
 /** 记录读取的特征id */
@@ -53,16 +54,28 @@
     return self.isAuthorized;
 }
 
-- (void)startScan:(NSString *)deviceName deviceId:(NSString *)deviceId {
+- (void)startScan:(NSString *)deviceName deviceId:(NSString *)deviceId timeout:(int)timeout callback:(FlutterReply _Nonnull)callback {
     if (![self isEnabled]) {
         [MyLog log:@"please turn on bluetooth."];
         return;
     }
     self.deviceName = deviceName ?: @"";
     self.deviceId = deviceId ?: @"";
+    self.scanCallback = callback;
     [self.scanData removeAllObjects];
     [self.scannedPeripheralDict removeAllObjects];
     [self.centralManager scanForPeripheralsWithServices:nil options:nil];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self callBackScanResult];
+    });
+}
+
+- (void)callBackScanResult {
+    if (self.scanCallback != nil) {
+        [self stopScan];
+        self.scanCallback([[BasicMessageChannelReply sharedReply] success:self.scanData]);
+        self.scanCallback = nil;
+    }
 }
 
 - (NSDictionary *)stopScan {
@@ -303,6 +316,9 @@
             BluetoothConstantsKeyDeviceName: localName ?: identifier
         };
         [self.scanData setObject:peripheralDict forKey:identifier];
+        if ([localName isEqualToString:self.deviceName] || [identifier isEqualToString:self.deviceId]) {
+            [self callBackScanResult];
+        }
     }
 }
 
